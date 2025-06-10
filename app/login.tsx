@@ -6,7 +6,6 @@ const Login = () => {
   const [password, setPassword] = useState('')
 
   return (
-    <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.title}>Sign In</Text>
         <Text style={styles.subtitle}>Welcome back! Please login to your account.</Text>
@@ -34,23 +33,15 @@ const Login = () => {
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
       </View>
-    </View>
   )
 }
 
 export default Login
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eaf0fb',
-    padding: 20,
-  },
   card: {
     width: '100%',
-    maxWidth: 350,
+    height: '100%',
     backgroundColor: '#fff',
     borderRadius: 16,
     paddingLeft: 24,
@@ -63,12 +54,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     alignItems: 'center',
-    
+    justifyContent: 'center', // Center contents vertically
+    alignSelf: 'center',      // Center card horizontally
   },
   title: {
     fontSize: 30,
     fontWeight: '700',
     color: '#2d3a4b',
+    textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
