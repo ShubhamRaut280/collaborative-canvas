@@ -1,14 +1,41 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+
+const loginStrings = {
+    title: 'Sign In',
+    subtitle: 'Welcome back! Please login to your account.',
+    buttonText: 'Sign In',
+    extraButton: "Don't have an account?",
+  }
+
+const registerStrings = {
+    title: 'Create Account',
+    subtitle: 'Join us today! Please register to create a new account.',
+    buttonText: 'Sign Up',
+    extraButton: "Already have an account?",
+  }
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const[pageTexts, setPageTexts] = useState(loginStrings)
+  const[isLogin, setIsLogin] = useState(true)
+
+    const handleLoginSwitch = () => {
+        setIsLogin(true)
+        setPageTexts(loginStrings)
+    }
+
+    const handleRegisterSwitch = () => {
+        setIsLogin(false)
+        setPageTexts(registerStrings)
+
+    }
 
   return (
       <View style={styles.card}>
-        <Text style={styles.title}>Sign In</Text>
-        <Text style={styles.subtitle}>Welcome back! Please login to your account.</Text>
+        <Text style={styles.title}>{pageTexts.title}</Text>
+        <Text style={styles.subtitle}>{pageTexts.subtitle}</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -26,11 +53,11 @@ const Login = () => {
           value={password}
           onChangeText={setPassword}
         />
-        <TouchableOpacity style={styles.signupButton}>
-          <Text style={styles.signupText}>Don&apos;t have an account?</Text>
+        <TouchableOpacity style={styles.signupButton} onPress={isLogin ? handleRegisterSwitch : handleLoginSwitch}>
+          <Text style={styles.signupText}>{pageTexts.extraButton}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Sign In</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLoginSwitch}>
+          <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>
         </TouchableOpacity>
       </View>
   )
