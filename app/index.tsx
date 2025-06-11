@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { auth, app, } from '../firebaseConfig'
-import { AuthError, createUserWithEmailAndPassword , signInWithEmailAndPassword} from 'firebase/auth';
-import { FirebaseError } from 'firebase/app';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth } from '../firebaseConfig';
+import { useRouter } from 'expo-router';
+import { setData, getData } from './db/userdata';
 
 
 const loginStrings = {
@@ -20,10 +21,29 @@ const registerStrings = {
 }
 
 const Login = () => {
+    const router = useRouter();
+
+
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [pageTexts, setPageTexts] = useState(loginStrings)
+    const [userName, setUserName] = useState('')
     const [isLogin, setIsLogin] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
+
+
+
+    useEffect(() => {
+        const checkUser = async () => {
+            const userEmail = await getData('userEmail');
+            const userName = await getData('userName');
+            if( userEmail && userName) {
+                router.replace('/home');
+            }
+        }
+        checkUser();
+    }, []);
+
 
 
     const validateCredentials = () => {
@@ -36,35 +56,57 @@ const Login = () => {
             alert('Please enter a valid email address.')
             return false
         }
+        if (!isLogin && !userName) {
+            alert('Please fill in all fields.')
+            return false
+        }
         return true
     }
 
-    const handleLogin =  async () => {
-        if (validateCredentials()) {
+    const handleNewUser = async (user: any) => {
+        if (userName) {
+            setData('userName', userName);
+            setData('userEmail', user.email);
+            await updateProfile(user, { displayName: userName });
+            alert('Registration successful! You can now log in.')
 
+        } else {
+            alert('Please enter your name.');
+        }
+    }
+
+    const handleLogin = async () => {
+        if (validateCredentials()) {
+            setIsLoading(true)
             await signInWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    alert(`Welcome back!`);
+                    alert(`Welcome back! ${user.displayName}`);
+                    setData('userName', user.displayName || 'User');
+                    setData('userEmail', user.email || 'No email provided');
+                    router.replace('/home');
                 })
                 .catch((error) => {
                     alert(`Error: ${error.message}`);
-                });
-
+                })
+                .finally(() => setIsLoading(false));
         }
     }
 
     const handleRegister = async () => {
         if (validateCredentials()) {
+            setIsLoading(true)
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
-                alert('Registration successful! You can now log in.')
+                handleNewUser(auth.currentUser);
             } catch (error: any) {
                 if (error.code === 'auth/email-already-in-use') {
                     alert('This email is already in use. Please try another one.')
                 } else {
                     alert(`Error: ${error.message}`)
                 }
+            } finally {
+                setIsLoading(false)
             }
         }
     }
@@ -84,6 +126,15 @@ const Login = () => {
         <View style={styles.card}>
             <Text style={styles.title}>{pageTexts.title}</Text>
             <Text style={styles.subtitle}>{pageTexts.subtitle}</Text>
+            {!isLogin && (
+                <TextInput
+                    style={styles.input}
+                    placeholder="Name"
+                    placeholderTextColor="#b0b3b8"
+                    value={userName}
+                    onChangeText={setUserName}
+                />
+            )}
             <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -104,8 +155,12 @@ const Login = () => {
             <TouchableOpacity style={styles.signupButton} onPress={isLogin ? handleRegisterSwitch : handleLoginSwitch}>
                 <Text style={styles.signupText}>{pageTexts.extraButton}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={isLogin ? handleLogin : handleRegister}>
-                <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>
+            <TouchableOpacity style={styles.button} onPress={isLogin ? handleLogin : handleRegister} disabled={isLoading}>
+                {isLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                    <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>
+                )}
             </TouchableOpacity>
         </View>
     )
