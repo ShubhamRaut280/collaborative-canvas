@@ -1,244 +1,205 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../firebaseConfig';
-import { useRouter } from 'expo-router';
-import { setData, getData } from './db/userdata';
+import { FontAwesome5 } from "@expo/vector-icons";
+import {
+    Canvas,
+    Path,
+} from "@shopify/react-native-skia";
+import { StatusBar } from "expo-status-bar";
+import React, { useRef, useState } from "react";
+import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+    Gesture,
+    GestureDetector,
+    GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
+} from "react-native-reanimated";
 
-
-const loginStrings = {
-    title: 'Sign In',
-    subtitle: 'Welcome back! Please login to your account.',
-    buttonText: 'Login',
-    extraButton: "Don't have an account?",
+interface IPath {
+    segments: string[];
+    color?: string;
 }
 
-const registerStrings = {
-    title: 'Create Account',
-    subtitle: 'Join us today! Please register to create a new account.',
-    buttonText: 'Create Account',
-    extraButton: "Already have an account?",
-}
+export default function App() {
+    const { width, height } = Dimensions.get("window");
 
-const Login = () => {
-    const router = useRouter();
+    const paletteColors = ["red", "green", "blue", "yellow"];
+    const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
+    const [paths, setPaths] = useState<IPath[]>([]);
+    const [curr, setCurr] = useState<number>(0); // index of last visible path (exclusive)
+    const currentPath = useRef<IPath | null>(null);
 
-
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [pageTexts, setPageTexts] = useState(loginStrings)
-    const [userName, setUserName] = useState('')
-    const [isLogin, setIsLogin] = useState(true)
-    const [isLoading, setIsLoading] = useState(false)
-
-
-
-    useEffect(() => {
-        const checkUser = async () => {
-            if(auth.currentUser?.displayName) {
-                router.replace('/home');
+    // Gesture for drawing lines
+    const pan = Gesture.Pan()
+        .runOnJS(true)
+        .onStart((g) => {
+            // If curr is not at the end, remove all redo paths
+            if (curr < paths.length) {
+                setPaths((prev) => prev.slice(0, curr));
             }
-        }
-        checkUser();
-    }, []);
-
-
-
-    const validateCredentials = () => {
-        // Basic validation logic
-        if (!email || !password) {
-            alert('Please fill in all fields.')
-            return false
-        }
-        if (!/\S+@\S+\.\S+/.test(email)) {
-            alert('Please enter a valid email address.')
-            return false
-        }
-        if (!isLogin && !userName) {
-            alert('Please fill in all fields.')
-            return false
-        }
-        return true
-    }
-
-    const handleNewUser = async (user: any) => {
-        if (userName) {
-            setData('userName', userName);
-            setData('userEmail', user.email);
-            await updateProfile(user, { displayName: userName });
-            alert('Registration successful! You can now log in.')
-
-        } else {
-            alert('Please enter your name.');
-        }
-    }
-
-    const handleLogin = async () => {
-        if (validateCredentials()) {
-            setIsLoading(true)
-            await signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    alert(`Welcome back! ${user.displayName}`);
-                    setData('userName', user.displayName || 'User');
-                    setData('userEmail', user.email || 'No email provided');
-                    router.replace('/home');
-                })
-                .catch((error) => {
-                    alert(`Error: ${error.message}`);
-                })
-                .finally(() => setIsLoading(false));
-        }
-    }
-
-    const handleRegister = async () => {
-        if (validateCredentials()) {
-            setIsLoading(true)
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                handleNewUser(auth.currentUser);
-            } catch (error: any) {
-                if (error.code === 'auth/email-already-in-use') {
-                    alert('This email is already in use. Please try another one.')
-                } else {
-                    alert(`Error: ${error.message}`)
-                }
-            } finally {
-                setIsLoading(false)
+            currentPath.current = {
+                segments: [`M ${g.x} ${g.y}`],
+                color: paletteColors[activePaletteColorIndex],
+            };
+            setPaths((prev) => [...prev, currentPath.current!]);
+            setCurr((prev) => prev + 1);
+        })
+        .onUpdate((g) => {
+            if (currentPath.current) {
+                currentPath.current.segments.push(`L ${g.x} ${g.y}`);
+                // Update only the last path in the array
+                setPaths((prev) => {
+                    const updated = [...prev];
+                    updated[updated.length - 1] = { ...currentPath.current! };
+                    return updated;
+                });
             }
-        }
-    }
+        })
+        .onEnd(() => {
+            currentPath.current = null; // End the current stroke
+        })
+        .minDistance(1);
 
-    const handleLoginSwitch = () => {
-        setIsLogin(true)
-        setPageTexts(loginStrings)
-    }
+    // Undo: move curr left (min 0)
+    const undoLast = () => {
+        setCurr((prev) => (prev > 0 ? prev - 1 : 0));
+    };
 
-    const handleRegisterSwitch = () => {
-        setIsLogin(false)
-        setPageTexts(registerStrings)
+    // Redo: move curr right (max paths.length)
+    const redoLast = () => {
+        setCurr((prev) => (prev < paths.length ? prev + 1 : prev));
+    };
 
-    }
+    const paletteVisible = useSharedValue(false);
+    const animatedPaletteStyle = useAnimatedStyle(() => {
+        return {
+            top: withSpring(paletteVisible.value ? -275 : -100),
+            height: withTiming(paletteVisible.value ? 200 : 50),
+            opacity: withTiming(paletteVisible.value ? 100 : 0, { duration: 100 }),
+        };
+    });
+
+    const animatedSwatchStyle = useAnimatedStyle(() => {
+        return {
+            top: withSpring(paletteVisible.value ? -50 : 0),
+            height: paletteVisible.value ? 0 : 50,
+            opacity: withTiming(paletteVisible.value ? 0 : 100, { duration: 100 }),
+        };
+    });
 
     return (
-        <View style={styles.card}>
-            <Text style={styles.title}>{pageTexts.title}</Text>
-            <Text style={styles.subtitle}>{pageTexts.subtitle}</Text>
-            {!isLogin && (
-                <TextInput
-                    style={styles.input}
-                    placeholder="Name"
-                    placeholderTextColor="#b0b3b8"
-                    value={userName}
-                    onChangeText={setUserName}
-                />
-            )}
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#b0b3b8"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#b0b3b8"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
-            <TouchableOpacity style={styles.signupButton} onPress={isLogin ? handleRegisterSwitch : handleLoginSwitch}>
-                <Text style={styles.signupText}>{pageTexts.extraButton}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={isLogin ? handleLogin : handleRegister} disabled={isLoading}>
-                {isLoading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                    <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>
-                )}
-            </TouchableOpacity>
-        </View>
-    )
+        <>
+            <GestureHandlerRootView>
+                <View style={{ height, width }}>
+                    <GestureDetector gesture={pan}>
+                        <Canvas style={{ flex: 8 }}>
+                            {paths.slice(0, curr).map((p, index) =>
+                                Array.isArray(p.segments) && p.segments.length > 0 ? (
+                                    <Path
+                                        key={index}
+                                        path={p.segments.join(" ")}
+                                        strokeWidth={5}
+                                        style="stroke"
+                                        color={p.color}
+                                    />
+                                ) : null
+                            )}
+                        </Canvas>
+                    </GestureDetector>
+                    <View style={{ padding: 10, flex: 1, backgroundColor: "#edede9" }}>
+                        <View style={{ flex: 1, flexDirection: "row" }}>
+                            <Animated.View
+                                style={[
+                                    { padding: 10, position: "absolute", width: 60 },
+                                    animatedPaletteStyle,
+                                ]}
+                            >
+                                {paletteColors.map((c, i) => (
+                                    <TouchableOpacity
+                                        key={i}
+                                        onPress={() => {
+                                            setActivePaletteColorIndex(i);
+                                            paletteVisible.value = false;
+                                        }}
+                                    >
+                                        <View
+                                            style={[
+                                                {
+                                                    backgroundColor: c,
+                                                },
+                                                styles.paletteColor,
+                                            ]}
+                                        ></View>
+                                    </TouchableOpacity>
+                                ))}
+                            </Animated.View>
+                            <View style={styles.swatchContainer}>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        paletteVisible.value = !paletteVisible.value;
+                                    }}
+                                >
+                                    <Animated.View
+                                        style={[
+                                            {
+                                                backgroundColor: paletteColors[activePaletteColorIndex],
+                                            },
+                                            styles.swatch,
+                                            animatedSwatchStyle,
+                                        ]}
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={undoLast}>
+                                    <FontAwesome5
+                                        name="undo"
+                                        style={styles.icon}
+                                    />
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={redoLast}>
+                                    <FontAwesome5
+                                        name="redo"
+                                        style={styles.icon}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </GestureHandlerRootView>
+            <StatusBar style="auto" />
+        </>
+    );
 }
 
-export default Login
-
 const styles = StyleSheet.create({
-    card: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        paddingLeft: 24,
-        paddingRight: 24,
-        paddingTop: 50,
-        paddingBottom: 50,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-        elevation: 8,
-        alignItems: 'center',
-        justifyContent: 'center', // Center contents vertically
-        alignSelf: 'center',      // Center card horizontally
+    icon: {
+        fontSize: 40,
+        textAlign: "center",
+        marginHorizontal: 5,
     },
-    title: {
-        fontSize: 30,
-        fontWeight: '700',
-        color: '#2d3a4b',
-        textAlign: 'center',
-        marginBottom: 8,
+    paletteColor: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginVertical: 5,
+        zIndex: 2,
     },
-    subtitle: {
-        fontSize: 15,
-        color: '#6b7a90',
-        marginBottom: 30,
-        marginTop: 15,
-        textAlign: 'center',
+    swatch: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderColor: "black",
+        marginVertical: 5,
+        zIndex: 1,
     },
-    input: {
-        width: '100%',
-        height: 55,
-        backgroundColor: '#f4f6fb',
-        borderRadius: 10,
-        paddingHorizontal: 16,
-        marginBottom: 14,
-        borderWidth: 1,
-        borderColor: '#e0e4ed',
-        fontSize: 16,
-        color: '#222',
+    swatchContainer: {
+        flexDirection: "row",
+        flex: 1,
+        padding: 10,
+        justifyContent: "space-between",
+        alignItems: "center",
     },
-    signupButton: {
-        alignSelf: 'flex-end',
-        paddingVertical: 10,
-        marginBottom: 18,
-    },
-    signupText: {
-        color: '#4f8cff',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    button: {
-        width: '100%',
-        height: 48,
-        backgroundColor: '#4f8cff',
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 4,
-        shadowColor: '#4f8cff',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.18,
-        shadowRadius: 6,
-        elevation: 2,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        letterSpacing: 1,
-    },
-})
+});
