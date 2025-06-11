@@ -35,9 +35,8 @@ const Login = () => {
 
     useEffect(() => {
         const checkUser = async () => {
-            const userEmail = await getData('userEmail');
-            const userName = await getData('userName');
-            if( userEmail && userName) {
+            if(auth.currentUser) {
+                
                 router.replace('/home');
             }
         }
