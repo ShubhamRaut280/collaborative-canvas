@@ -28,7 +28,7 @@ import Stroke from "./models/Stroke"; // Assuming you have a Stroke model define
 
 export default function CanvasScreen() {
     const { width, height } = Dimensions.get("window");
-
+    const [isFirstRender, setIsFirstRender] = useState(true);
     const router = useRouter();
     const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
 
@@ -53,7 +53,8 @@ export default function CanvasScreen() {
             const newStroke = snapshot.val() as Stroke;
 
             // Avoid re-adding stroke created by this user
-            if (newStroke.createdBy !== auth.currentUser?.displayName) {
+            if (isFirstRender || newStroke.createdBy !== auth.currentUser?.displayName) {
+                setIsFirstRender(false);
                 setPaths((prev) => [...prev, newStroke]);
                 setCurr((prev) => prev + 1);
             }

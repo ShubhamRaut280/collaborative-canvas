@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
-import { FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { auth, firestore, rdb } from '../firebaseConfig'
 import CanvasFile from './models/CanvasFile'
 import Stroke from './models/Stroke'
@@ -11,15 +11,18 @@ const Home = () => {
     const [dialogVisible, setDialogVisible] = useState(false)
     const [newCanvasName, setNewCanvasName] = useState('')
     const [files, setFiles] = useState<CanvasFile[]>([])
+    const [isLoading, setIsLoading] = useState(true) // <-- Add loading state
     const router = useRouter()
 
     useEffect(() => {
+        setIsLoading(true)
         const unsubscribe = onSnapshot(collection(firestore, 'canvasFiles'), (snapshot) => {
             const filesData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as CanvasFile[]
             setFiles(filesData)
+            setIsLoading(false) // <-- Set loading false after data is loaded
         })
 
         return () => unsubscribe()
@@ -88,7 +91,7 @@ async function initializeBlankCanvas(canvasId: string): Promise<void> {
     color: '#FFFFFF', 
     segments: [],
     createdAt: Date.now(),
-    updatedAt: Date.now(),
+    createdBy: auth.currentUser?.displayName || 'unknown',
   };
 
   await set(initialRef, {
@@ -98,14 +101,21 @@ async function initializeBlankCanvas(canvasId: string): Promise<void> {
 
 return (
     <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>My Canvas Files</Text>
-        <FlatList
-            data={files}
-            keyExtractor={item => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={<Text style={styles.empty}>No files found.</Text>}
-        />
+        <Text style={styles.title}>All Canvas Files</Text>
+        {isLoading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#4f8cff" />
+                    <Text style={{ color: '#4f8cff', marginTop: 12 }}>Loading...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={files}
+                    keyExtractor={item => item.id}
+                    renderItem={renderItem}
+                    contentContainerStyle={styles.list}
+                    ListEmptyComponent={<Text style={styles.empty}>No files found.</Text>}
+                />
+            )}
         <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
             <Text style={styles.createButtonText}>Create New</Text>
         </TouchableOpacity>

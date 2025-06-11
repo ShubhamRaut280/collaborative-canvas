@@ -35,7 +35,7 @@ const Login = () => {
 
     useEffect(() => {
         const checkUser = async () => {
-            if(auth.currentUser?.displayName || await getData('userName')) {
+            if(auth.currentUser?.displayName) {
                 router.replace('/home');
             }
         }
