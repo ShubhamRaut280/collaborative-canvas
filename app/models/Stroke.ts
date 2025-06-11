@@ -1,7 +1,8 @@
-type Stroke = {
-  color: string;
-  points: [number, number][];
-  timestamp: number;
-};
+interface Stroke {
+    segments: string[];
+    color?: string;
+    createdAt?: number;
+    updatedAt?: number;
+}
 
 export default Stroke;

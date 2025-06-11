@@ -1,11 +1,10 @@
-import { auth, firestore, rdb } from '../firebaseConfig'
 import { useRouter } from 'expo-router'
+import { ref, set } from 'firebase/database'
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
-import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Dialog from 'react-native-dialog'
+import { FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { auth, firestore, rdb } from '../firebaseConfig'
 import CanvasFile from './models/CanvasFile'
-import { ref, set } from 'firebase/database'
 import Stroke from './models/Stroke'
 
 const Home = () => {
@@ -45,7 +44,7 @@ const Home = () => {
         return (
             <TouchableOpacity
                 style={styles.item}
-                onPress={() => router.push({ pathname: '/canvas', params: { ...item } })}
+                onPress={() => router.push({ pathname: '/canvasscreen', params: { ...item } })}
             >
                 <Text style={styles.fileName}>{item.name}</Text>
                 <View style={{ alignItems: 'flex-end', flex: 1 }}>
@@ -80,15 +79,16 @@ const handleDialogSubmit = async () => {
     setDoc(canvasDocRef, newCanvas)
     await initializeBlankCanvas(newCanvas.id)
     setNewCanvasName('')
-    router.push({ pathname: '/canvas', params: { ...newCanvas } })
+    router.push({ pathname: '/canvasscreen', params: { ...newCanvas } })
 }
 
 async function initializeBlankCanvas(canvasId: string): Promise<void> {
   const initialRef = ref(rdb, `drawings/${canvasId}/strokes`);
   const starterStroke: Stroke = {
     color: '#FFFFFF', 
-    points: [],
-    timestamp: Date.now(),
+    segments: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
   };
 
   await set(initialRef, {
@@ -109,58 +109,53 @@ return (
         <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
             <Text style={styles.createButtonText}>Create New</Text>
         </TouchableOpacity>
-        <Dialog.Container
-            visible={dialogVisible}
-            contentStyle={{
-                borderRadius: 16,
-                backgroundColor: '#f8faff',
-                padding: 24,
-                shadowColor: '#4f8cff',
-                shadowOpacity: 0.15,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 12,
-                elevation: 8,
-            }}
-        >
-            <Dialog.Title style={{ color: '#2d3a4b', fontWeight: 'bold', fontSize: 22, textAlign: 'left' }}>
-                Create New Canvas
-            </Dialog.Title>
-            <Dialog.Description style={{ color: '#6b7a90', fontSize: 15, marginBottom: 10, textAlign: 'left' }}>
-                Enter a name for your new canvas
-            </Dialog.Description>
-            <Dialog.Input
-                placeholder=" Canvas name"
-                value={newCanvasName}
-                onChangeText={setNewCanvasName}
-                style={{
-                    backgroundColor: '#fff',
-                    borderRadius: 8,
-
-                    borderColor: '#e0e4ed',
-                    borderWidth: 1,
-                    paddingHorizontal: 20,
-                    paddingVertical: 10,
-                    fontSize: 16,
-                    color: '#2d3a4b',
-                    marginBottom: 10,
-                }}
-                placeholderTextColor="#b0b3b8"
-            />
-            <Dialog.Button
-                label="Cancel"
-                onPress={handleDialogCancel}
-                style={{ color: '#6b7a90', fontWeight: '500' }}
-            />
-            <Dialog.Button
-                label="Create"
-                onPress={handleDialogSubmit}
-                disabled={!newCanvasName.trim()}
-                style={{
-                    color: !newCanvasName.trim() ? '#b0b3b8' : '#4f8cff',
-                    fontWeight: 'bold',
-                }}
-            />
-        </Dialog.Container>
+        <Modal
+                visible={dialogVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={handleDialogCancel}
+            >
+                <View style={modalStyles.overlay}>
+                    <View style={modalStyles.dialog}>
+                        <Text style={modalStyles.title}>Create New Canvas</Text>
+                        <Text style={modalStyles.description}>Enter a name for your new canvas</Text>
+                        <TextInput
+                            placeholder="Canvas name"
+                            value={newCanvasName}
+                            onChangeText={setNewCanvasName}
+                            style={modalStyles.input}
+                            placeholderTextColor="#b0b3b8"
+                            autoFocus={Platform.OS !== 'web'}
+                        />
+                        <View style={modalStyles.buttonRow}>
+                            <Pressable
+                                style={({ pressed }) => [
+                                    modalStyles.button,
+                                    { backgroundColor: pressed ? '#f0f0f0' : 'transparent' }
+                                ]}
+                                onPress={handleDialogCancel}
+                            >
+                                <Text style={modalStyles.cancelText}>Cancel</Text>
+                            </Pressable>
+                            <Pressable
+                                style={({ pressed }) => [
+                                    modalStyles.button,
+                                    { backgroundColor: pressed ? '#e6f0ff' : 'transparent' }
+                                ]}
+                                onPress={handleDialogSubmit}
+                                disabled={!newCanvasName.trim()}
+                            >
+                                <Text style={[
+                                    modalStyles.createText,
+                                    { color: !newCanvasName.trim() ? '#b0b3b8' : '#4f8cff' }
+                                ]}>
+                                    Create
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
     </SafeAreaView>
 )
 }
@@ -235,3 +230,67 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
 })
+
+const modalStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.18)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dialog: {
+        width: 340,
+        borderRadius: 16,
+        backgroundColor: '#f8faff',
+        padding: 24,
+        shadowColor: '#4f8cff',
+        shadowOpacity: 0.15,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    title: {
+        color: '#2d3a4b',
+        fontWeight: 'bold',
+        fontSize: 22,
+        textAlign: 'left',
+        marginBottom: 4,
+    },
+    description: {
+        color: '#6b7a90',
+        fontSize: 15,
+        marginBottom: 10,
+        textAlign: 'left',
+    },
+    input: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderColor: '#e0e4ed',
+        borderWidth: 1,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        fontSize: 16,
+        color: '#2d3a4b',
+        marginBottom: 10,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 8,
+    },
+    button: {
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        borderRadius: 8,
+        marginLeft: 8,
+    },
+    cancelText: {
+        color: '#6b7a90',
+        fontWeight: '500',
+        fontSize: 16,
+    },
+    createText: {
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+});
