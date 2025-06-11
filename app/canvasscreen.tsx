@@ -1,5 +1,5 @@
-import { FontAwesome5 } from "@expo/vector-icons";
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
@@ -20,9 +20,10 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import Stroke from "./models/Stroke"; // Assuming you have a Stroke model defined
 import { useLocalSearchParams, useRouter } from 'expo-router';
-
+import { push, ref } from 'firebase/database';
+import { auth, rdb } from '../firebaseConfig'; // Adjust the import path as needed
+import Stroke from "./models/Stroke"; // Assuming you have a Stroke model defined
 
 
 export default function CanvasScreen() {
@@ -37,6 +38,16 @@ export default function CanvasScreen() {
     const [curr, setCurr] = useState<number>(0); // index of last visible path (exclusive)
     const currentPath = useRef<Stroke | null>(null);
 
+
+    const strokesRef = ref(rdb, `drawings/${id}/strokes`);
+
+    const saveNewPathToRDB = (stroke: Stroke) => {
+        push(strokesRef, stroke);
+        setPaths(prev => [...prev, stroke]);
+        setCurr(prev => prev + 1);
+    };
+
+
     // Gesture for drawing lines
     const pan = Gesture.Pan()
         .runOnJS(true)
@@ -48,6 +59,8 @@ export default function CanvasScreen() {
             currentPath.current = {
                 segments: [`M ${g.x} ${g.y}`],
                 color: paletteColors[activePaletteColorIndex],
+                createdAt: Date.now(),
+                createdBy: auth.currentUser?.displayName || "Unknown",
             };
             setPaths((prev) => [...prev, currentPath.current!]);
             setCurr((prev) => prev + 1);
@@ -61,10 +74,14 @@ export default function CanvasScreen() {
                     updated[updated.length - 1] = { ...currentPath.current! };
                     return updated;
                 });
+
             }
         })
         .onEnd(() => {
-            // currentPath.current = null; // End the current stroke
+            if (currentPath.current) {
+                saveNewPathToRDB(currentPath.current);
+                currentPath.current = null; // clear after saving
+            }
         })
         .minDistance(1);
 
