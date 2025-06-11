@@ -7,7 +7,7 @@ import {
     Path,
 } from "@shopify/react-native-skia";
 import { StatusBar } from "expo-status-bar";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Gesture,
     GestureDetector,
@@ -21,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { push, ref } from 'firebase/database';
+import { onChildAdded, push, ref } from 'firebase/database';
 import { auth, rdb } from '../firebaseConfig'; // Adjust the import path as needed
 import Stroke from "./models/Stroke"; // Assuming you have a Stroke model defined
 
@@ -46,6 +46,24 @@ export default function CanvasScreen() {
         setPaths(prev => [...prev, stroke]);
         setCurr(prev => prev + 1);
     };
+
+
+    useEffect(() => {
+        const unsub = onChildAdded(strokesRef, (snapshot) => {
+            const newStroke = snapshot.val() as Stroke;
+
+            // Avoid re-adding stroke created by this user
+            if (newStroke.createdBy !== auth.currentUser?.displayName) {
+                setPaths((prev) => [...prev, newStroke]);
+                setCurr((prev) => prev + 1);
+            }
+        });
+
+        return () => {
+            // Cleanup listener on unmount
+            unsub();
+        };
+    }, []);
 
 
     // Gesture for drawing lines
