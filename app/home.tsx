@@ -92,6 +92,7 @@ async function initializeBlankCanvas(canvasId: string): Promise<void> {
     segments: [],
     createdAt: Date.now(),
     createdBy: auth.currentUser?.displayName || 'unknown',
+    strokeWidth: 5,
   };
 
   await set(initialRef, {

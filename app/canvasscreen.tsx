@@ -21,13 +21,12 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { onChildAdded, push, ref, set } from 'firebase/database';
+import { onChildAdded, push, ref } from 'firebase/database';
 import { auth, rdb } from '../firebaseConfig';
 import Stroke from "./models/Stroke";
 
 const canvasBackgroundColor = "#fff";
-
-
+const thicknessOptions = [10, 20, 30];
 
 export default function CanvasScreen() {
     const { width, height } = Dimensions.get("window");
@@ -41,7 +40,8 @@ export default function CanvasScreen() {
     const [curr, setCurr] = useState<number>(0);
     const currentPath = useRef<Stroke | null>(null);
     const [isEraserActive, setIsEraserActive] = useState(false);
-
+    const [strokeWidth, setStrokeWidth] = useState(thicknessOptions[0]);
+    const [showThicknessDropdown, setShowThicknessDropdown] = useState(false);
 
     const strokesRef = ref(rdb, `drawings/${id}/strokes`);
 
@@ -76,9 +76,10 @@ export default function CanvasScreen() {
             }
             currentPath.current = {
                 segments: [`M ${g.x} ${g.y}`],
-                color: paletteColors[activePaletteColorIndex],
+                color: isEraserActive ? canvasBackgroundColor : paletteColors[activePaletteColorIndex],
                 createdAt: Date.now(),
                 createdBy: auth.currentUser?.displayName || "Unknown",
+                strokeWidth: strokeWidth, // Save stroke width with stroke
             };
             setPaths((prev) => [...prev, currentPath.current!]);
             setCurr((prev) => prev + 1);
@@ -86,13 +87,11 @@ export default function CanvasScreen() {
         .onUpdate((g) => {
             if (currentPath.current) {
                 currentPath.current.segments.push(`L ${g.x} ${g.y}`);
-                // Update only the last path in the array
                 setPaths((prev) => {
                     const updated = [...prev];
                     updated[updated.length - 1] = { ...currentPath.current! };
                     return updated;
                 });
-
             }
         })
         .onEnd(() => {
@@ -142,10 +141,7 @@ export default function CanvasScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => {
-                    router.back();
-                    // router.push("/gesturedemo");
-                }} style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#222" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{name || 'Canvas'}</Text>
@@ -179,15 +175,42 @@ export default function CanvasScreen() {
                         style={styles.icon}
                     />
                 </TouchableOpacity>
-
                 <TouchableOpacity onPress={handleEraser}>
                     <FontAwesome5
                         name={isEraserActive ? "eraser" : "pencil-alt"}
                         style={styles.icon}
                     />
                 </TouchableOpacity>
-
-
+                {/* Thickness Dropdown */}
+                <View style={styles.thicknessDropdownContainer}>
+                    <TouchableOpacity
+                        style={styles.thicknessDropdownButton}
+                        onPress={() => setShowThicknessDropdown((v) => !v)}
+                    >
+                        <Text style={styles.thicknessDropdownText}>
+                            {strokeWidth}px ▼
+                        </Text>
+                    </TouchableOpacity>
+                    {showThicknessDropdown && (
+                        <View style={styles.thicknessDropdownList}>
+                            {thicknessOptions.map((option) => (
+                                <TouchableOpacity
+                                    key={option}
+                                    style={[
+                                        styles.thicknessDropdownItem,
+                                        strokeWidth === option && styles.thicknessDropdownItemSelected,
+                                    ]}
+                                    onPress={() => {
+                                        setStrokeWidth(option);
+                                        setShowThicknessDropdown(false);
+                                    }}
+                                >
+                                    <Text style={styles.thicknessDropdownItemText}>{option}px</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+                </View>
             </View>
 
             <GestureHandlerRootView>
@@ -199,7 +222,7 @@ export default function CanvasScreen() {
                                     <Path
                                         key={index}
                                         path={p.segments.join(" ")}
-                                        strokeWidth={5}
+                                        strokeWidth={p.strokeWidth || 5}
                                         style="stroke"
                                         color={p.color}
                                     />
@@ -297,5 +320,51 @@ const styles = StyleSheet.create({
         padding: 10,
         justifyContent: "space-evenly",
         alignItems: "center",
+    },
+    thicknessDropdownContainer: {
+        marginLeft: 10,
+        position: 'relative',
+    },
+    thicknessDropdownButton: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        minWidth: 60,
+        alignItems: 'center',
+    },
+    thicknessDropdownText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#222',
+    },
+    thicknessDropdownList: {
+        position: 'absolute',
+        top: 40,
+        left: 0,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        zIndex: 10,
+        minWidth: 60,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+    },
+    thicknessDropdownItem: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    thicknessDropdownItemSelected: {
+        backgroundColor: '#e6f0ff',
+    },
+    thicknessDropdownItemText: {
+        fontSize: 16,
+        color: '#222',
     },
 });
