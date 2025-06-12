@@ -21,9 +21,12 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { onChildAdded, push, ref } from 'firebase/database';
+import { onChildAdded, push, ref, set } from 'firebase/database';
 import { auth, rdb } from '../firebaseConfig';
-import Stroke from "./models/Stroke"; 
+import Stroke from "./models/Stroke";
+
+const canvasBackgroundColor = "#fff";
+
 
 
 export default function CanvasScreen() {
@@ -32,11 +35,12 @@ export default function CanvasScreen() {
     const router = useRouter();
     const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
 
-    const paletteColors = ["red", "green", "blue", "yellow"];
+    const paletteColors = ["red", "green", "blue", "yellow", "white"];
     const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
     const [paths, setPaths] = useState<Stroke[]>([]);
-    const [curr, setCurr] = useState<number>(0); 
+    const [curr, setCurr] = useState<number>(0);
     const currentPath = useRef<Stroke | null>(null);
+    const [isEraserActive, setIsEraserActive] = useState(false);
 
 
     const strokesRef = ref(rdb, `drawings/${id}/strokes`);
@@ -106,6 +110,16 @@ export default function CanvasScreen() {
     const redoLast = () => {
         setCurr((prev) => (prev < paths.length ? prev + 1 : prev));
     };
+    const handleEraser = () => {
+        setIsEraserActive(!isEraserActive);
+        if (isEraserActive) {
+            setIsEraserActive(false);
+            setActivePaletteColorIndex(paletteColors.indexOf("white"));
+        } else {
+            setIsEraserActive(true);
+            setActivePaletteColorIndex(paletteColors.indexOf("red"));
+        }
+    }
 
     const paletteVisible = useSharedValue(false);
     const animatedPaletteStyle = useAnimatedStyle(() => {
@@ -165,6 +179,15 @@ export default function CanvasScreen() {
                         style={styles.icon}
                     />
                 </TouchableOpacity>
+
+                <TouchableOpacity onPress={handleEraser}>
+                    <FontAwesome5
+                        name={isEraserActive ? "eraser" : "pencil-alt"}
+                        style={styles.icon}
+                    />
+                </TouchableOpacity>
+
+
             </View>
 
             <GestureHandlerRootView>
@@ -224,7 +247,7 @@ export default function CanvasScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f6fa',
+        backgroundColor: canvasBackgroundColor,
     },
     header: {
         flexDirection: 'row',
