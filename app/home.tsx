@@ -89,7 +89,7 @@ async function initializeBlankCanvas(canvasId: string): Promise<void> {
   const initialRef = ref(rdb, `drawings/${canvasId}/strokes`);
   const starterStroke: Stroke = {
     color: '#FFFFFF', 
-    segments: [],
+    points: [],
     createdAt: Date.now(),
     createdBy: auth.currentUser?.displayName || 'unknown',
     strokeWidth: 5,

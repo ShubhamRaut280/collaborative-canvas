@@ -24,9 +24,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { onChildAdded, push, ref } from 'firebase/database';
 import { auth, rdb } from '../firebaseConfig';
 import Stroke from "./models/Stroke";
+import { getSmoothPath } from "./utils/skia";
 
 const canvasBackgroundColor = "#fff";
-const thicknessOptions = [10, 20, 30];
+const thicknessOptions = [5, 10, 20, 30];
 
 export default function CanvasScreen() {
     const { width, height } = Dimensions.get("window");
@@ -75,7 +76,7 @@ export default function CanvasScreen() {
                 setPaths((prev) => prev.slice(0, curr));
             }
             currentPath.current = {
-                segments: [`M ${g.x} ${g.y}`],
+                points: [{ x: g.x, y: g.y }],
                 color: isEraserActive ? canvasBackgroundColor : paletteColors[activePaletteColorIndex],
                 createdAt: Date.now(),
                 createdBy: auth.currentUser?.displayName || "Unknown",
@@ -86,7 +87,7 @@ export default function CanvasScreen() {
         })
         .onUpdate((g) => {
             if (currentPath.current) {
-                currentPath.current.segments.push(`L ${g.x} ${g.y}`);
+                currentPath.current.points.push({ x: g.x, y: g.y });
                 setPaths((prev) => {
                     const updated = [...prev];
                     updated[updated.length - 1] = { ...currentPath.current! };
@@ -218,10 +219,10 @@ export default function CanvasScreen() {
                     <GestureDetector gesture={pan}>
                         <Canvas style={{ flex: 8 }}>
                             {paths.slice(0, curr).map((p, index) =>
-                                Array.isArray(p.segments) && p.segments.length > 0 ? (
+                                Array.isArray(p.points) && p.points.length > 1 ? (
                                     <Path
                                         key={index}
-                                        path={p.segments.join(" ")}
+                                        path={getSmoothPath(p.points)}
                                         strokeWidth={p.strokeWidth || 5}
                                         style="stroke"
                                         color={p.color}
@@ -363,8 +364,10 @@ const styles = StyleSheet.create({
     thicknessDropdownItemSelected: {
         backgroundColor: '#e6f0ff',
     },
-    thicknessDropdownItemText: {
-        fontSize: 16,
-        color: '#222',
-    },
-});
+        thicknessDropdownItemText: {
+            fontSize: 16,
+            shadowColor: '#000',
+            shadowOpacity: 0.08,
+            shadowOffset: { width: 0, height: 2 },
+        },
+    });
