@@ -22,8 +22,8 @@ import Animated, {
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { onChildAdded, push, ref } from 'firebase/database';
-import { auth, rdb } from '../firebaseConfig'; // Adjust the import path as needed
-import Stroke from "./models/Stroke"; // Assuming you have a Stroke model defined
+import { auth, rdb } from '../firebaseConfig';
+import Stroke from "./models/Stroke"; 
 
 
 export default function CanvasScreen() {
@@ -35,7 +35,7 @@ export default function CanvasScreen() {
     const paletteColors = ["red", "green", "blue", "yellow"];
     const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
     const [paths, setPaths] = useState<Stroke[]>([]);
-    const [curr, setCurr] = useState<number>(0); // index of last visible path (exclusive)
+    const [curr, setCurr] = useState<number>(0); 
     const currentPath = useRef<Stroke | null>(null);
 
 
@@ -51,8 +51,6 @@ export default function CanvasScreen() {
     useEffect(() => {
         const unsub = onChildAdded(strokesRef, (snapshot) => {
             const newStroke = snapshot.val() as Stroke;
-
-            // Avoid re-adding stroke created by this user
             if (isFirstRender || newStroke.createdBy !== auth.currentUser?.displayName) {
                 setIsFirstRender(false);
                 setPaths((prev) => [...prev, newStroke]);
@@ -61,17 +59,14 @@ export default function CanvasScreen() {
         });
 
         return () => {
-            // Cleanup listener on unmount
             unsub();
         };
     }, []);
 
 
-    // Gesture for drawing lines
     const pan = Gesture.Pan()
         .runOnJS(true)
         .onStart((g) => {
-            // If curr is not at the end, remove all redo paths
             if (curr < paths.length) {
                 setPaths((prev) => prev.slice(0, curr));
             }
@@ -104,12 +99,10 @@ export default function CanvasScreen() {
         })
         .minDistance(1);
 
-    // Undo: move curr left (min 0)
     const undoLast = () => {
         setCurr((prev) => (prev > 0 ? prev - 1 : 0));
     };
 
-    // Redo: move curr right (max paths.length)
     const redoLast = () => {
         setCurr((prev) => (prev < paths.length ? prev + 1 : prev));
     };
