@@ -1,5 +1,4 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
@@ -13,12 +12,6 @@ import {
     GestureDetector,
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
-} from "react-native-reanimated";
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { onChildAdded, push, ref } from 'firebase/database';
@@ -31,7 +24,6 @@ const thicknessOptions = [5, 10, 20, 30];
 
 export default function CanvasScreen() {
     const { width, height } = Dimensions.get("window");
-    const [isFirstRender, setIsFirstRender] = useState(true);
     const router = useRouter();
     const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
 
@@ -43,6 +35,8 @@ export default function CanvasScreen() {
     const [isEraserActive, setIsEraserActive] = useState(false);
     const [strokeWidth, setStrokeWidth] = useState(thicknessOptions[0]);
     const [showThicknessDropdown, setShowThicknessDropdown] = useState(false);
+    const [isFirstRender, setIsFirstRender] = useState(true);
+    const [paletteVisible, setPaletteVisible] = useState(false);
 
     const strokesRef = ref(rdb, `drawings/${id}/strokes`);
 
@@ -51,7 +45,6 @@ export default function CanvasScreen() {
         setPaths(prev => [...prev, stroke]);
         setCurr(prev => prev + 1);
     };
-
 
     useEffect(() => {
         const unsub = onChildAdded(strokesRef, (snapshot) => {
@@ -62,12 +55,8 @@ export default function CanvasScreen() {
                 setCurr((prev) => prev + 1);
             }
         });
-
-        return () => {
-            unsub();
-        };
+        return () => unsub();
     }, []);
-
 
     const pan = Gesture.Pan()
         .runOnJS(true)
@@ -80,7 +69,7 @@ export default function CanvasScreen() {
                 color: isEraserActive ? canvasBackgroundColor : paletteColors[activePaletteColorIndex],
                 createdAt: Date.now(),
                 createdBy: auth.currentUser?.displayName || "Unknown",
-                strokeWidth: strokeWidth, // Save stroke width with stroke
+                strokeWidth: strokeWidth,
             };
             setPaths((prev) => [...prev, currentPath.current!]);
             setCurr((prev) => prev + 1);
@@ -98,7 +87,7 @@ export default function CanvasScreen() {
         .onEnd(() => {
             if (currentPath.current) {
                 saveNewPathToRDB(currentPath.current);
-                currentPath.current = null; // clear after saving
+                currentPath.current = null;
             }
         })
         .minDistance(1);
@@ -110,33 +99,15 @@ export default function CanvasScreen() {
     const redoLast = () => {
         setCurr((prev) => (prev < paths.length ? prev + 1 : prev));
     };
+
     const handleEraser = () => {
         setIsEraserActive(!isEraserActive);
         if (isEraserActive) {
-            setIsEraserActive(false);
-            setActivePaletteColorIndex(paletteColors.indexOf("white"));
-        } else {
-            setIsEraserActive(true);
             setActivePaletteColorIndex(paletteColors.indexOf("red"));
+        } else {
+            setActivePaletteColorIndex(paletteColors.indexOf("white"));
         }
-    }
-
-    const paletteVisible = useSharedValue(false);
-    const animatedPaletteStyle = useAnimatedStyle(() => {
-        return {
-            top: withSpring(paletteVisible.value ? -275 : -100),
-            height: withTiming(paletteVisible.value ? 200 : 50),
-            opacity: withTiming(paletteVisible.value ? 100 : 0, { duration: 100 }),
-        };
-    });
-
-    const animatedSwatchStyle = useAnimatedStyle(() => {
-        return {
-            top: withSpring(paletteVisible.value ? -50 : 0),
-            height: paletteVisible.value ? 0 : 50,
-            opacity: withTiming(paletteVisible.value ? 0 : 100, { duration: 100 }),
-        };
-    });
+    };
 
     return (
         <View style={styles.container}>
@@ -149,32 +120,21 @@ export default function CanvasScreen() {
             </View>
 
             <View style={styles.swatchContainer}>
-                <TouchableOpacity
-                    onPress={() => {
-                        paletteVisible.value = !paletteVisible.value;
-                    }}
-                >
-                    <Animated.View
-                        style={[
-                            {
-                                backgroundColor: paletteColors[activePaletteColorIndex],
-                            },
-                            styles.swatch,
-                            animatedSwatchStyle,
-                        ]}
-                    />
-                </TouchableOpacity>
+                {!isEraserActive && (
+                    <TouchableOpacity onPress={() => setPaletteVisible(!paletteVisible)}>
+                        <View
+                            style={[
+                                { backgroundColor: paletteColors[activePaletteColorIndex] },
+                                styles.swatch,
+                            ]}
+                        />
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={undoLast}>
-                    <FontAwesome5
-                        name="undo"
-                        style={styles.icon}
-                    />
+                    <FontAwesome5 name="undo" style={styles.icon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={redoLast}>
-                    <FontAwesome5
-                        name="redo"
-                        style={styles.icon}
-                    />
+                    <FontAwesome5 name="redo" style={styles.icon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleEraser}>
                     <FontAwesome5
@@ -182,6 +142,7 @@ export default function CanvasScreen() {
                         style={styles.icon}
                     />
                 </TouchableOpacity>
+
                 {/* Thickness Dropdown */}
                 <View style={styles.thicknessDropdownContainer}>
                     <TouchableOpacity
@@ -214,6 +175,25 @@ export default function CanvasScreen() {
                 </View>
             </View>
 
+            {/* Move the palette dialog here, outside of the canvas area */}
+            {paletteVisible && (
+                <View style={styles.paletteDialog}>
+                    {paletteColors.map((c, i) => (
+                        <TouchableOpacity
+                            key={i}
+                            onPress={() => {
+                                setActivePaletteColorIndex(i);
+                                setPaletteVisible(false);
+                            }}
+                        >
+                            <View
+                                style={[{ backgroundColor: c }, styles.paletteColor]}
+                            />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
+
             <GestureHandlerRootView>
                 <View style={{ height, width }}>
                     <GestureDetector gesture={pan}>
@@ -232,34 +212,7 @@ export default function CanvasScreen() {
                         </Canvas>
                     </GestureDetector>
                     <View style={{ padding: 10, flex: 1, backgroundColor: "#edede9" }}>
-                        <View style={{ flex: 1, flexDirection: "row" }}>
-                            <Animated.View
-                                style={[
-                                    { padding: 10, position: "absolute", width: 60 },
-                                    animatedPaletteStyle,
-                                ]}
-                            >
-                                {paletteColors.map((c, i) => (
-                                    <TouchableOpacity
-                                        key={i}
-                                        onPress={() => {
-                                            setActivePaletteColorIndex(i);
-                                            paletteVisible.value = false;
-                                        }}
-                                    >
-                                        <View
-                                            style={[
-                                                {
-                                                    backgroundColor: c,
-                                                },
-                                                styles.paletteColor,
-                                            ]}
-                                        ></View>
-                                    </TouchableOpacity>
-                                ))}
-                            </Animated.View>
-
-                        </View>
+                        {/* Remove paletteVisible from here */}
                     </View>
                 </View>
             </GestureHandlerRootView>
@@ -364,10 +317,24 @@ const styles = StyleSheet.create({
     thicknessDropdownItemSelected: {
         backgroundColor: '#e6f0ff',
     },
-        thicknessDropdownItemText: {
-            fontSize: 16,
-            shadowColor: '#000',
-            shadowOpacity: 0.08,
-            shadowOffset: { width: 0, height: 2 },
-        },
-    });
+    thicknessDropdownItemText: {
+        fontSize: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    paletteDialog: {
+        position: 'absolute',
+        top: 120, // adjust as needed
+        left: 20, // adjust as needed
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 10,
+        zIndex: 100,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOpacity: 0.15,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 8,
+    },
+});
