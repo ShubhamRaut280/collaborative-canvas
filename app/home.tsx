@@ -21,7 +21,7 @@ const Home = () => {
                 id: doc.id,
                 ...doc.data()
             })) as CanvasFile[]
-            setFiles(filesData)
+            setFiles(filesData.filter(file => file.creator === auth.currentUser?.displayName)) // Ensure all fields are present
             setIsLoading(false) // <-- Set loading false after data is loaded
         })
 
