@@ -18,6 +18,7 @@ import { onChildAdded, push, ref } from 'firebase/database';
 import { auth, rdb } from '../firebaseConfig';
 import Stroke from "./models/Stroke";
 import { getSmoothPath } from "./utils/skia";
+import { remove } from 'firebase/database';
 
 const canvasBackgroundColor = "#fff";
 const thicknessOptions = [5, 10, 20, 30];
@@ -146,9 +147,9 @@ export default function CanvasScreen() {
                 <TouchableOpacity onPress={() => {
                     setPaths([]);
                     setCurr(0);
-                    // Optionally, clear strokes from Firebase as well:
-                    // import { remove } from 'firebase/database';
-                    // remove(strokesRef);
+                    // Remove all strokes from Firebase Realtime Database
+                    remove(strokesRef);
+
                 }}>
                     <FontAwesome5 name="trash" style={styles.icon} />
                 </TouchableOpacity>
