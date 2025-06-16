@@ -142,7 +142,16 @@ export default function CanvasScreen() {
                         style={styles.icon}
                     />
                 </TouchableOpacity>
-
+                {/* Clear Canvas Button */}
+                <TouchableOpacity onPress={() => {
+                    setPaths([]);
+                    setCurr(0);
+                    // Optionally, clear strokes from Firebase as well:
+                    // import { remove } from 'firebase/database';
+                    // remove(strokesRef);
+                }}>
+                    <FontAwesome5 name="trash" style={styles.icon} />
+                </TouchableOpacity>
                 {/* Thickness Dropdown */}
                 <View style={styles.thicknessDropdownContainer}>
                     <TouchableOpacity
