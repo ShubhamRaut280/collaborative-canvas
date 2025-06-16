@@ -3,11 +3,11 @@ import { ref, set } from 'firebase/database'
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { auth, firestore, rdb } from '../firebaseConfig'
-import CanvasFile from './models/CanvasFile'
-import Stroke from './models/Stroke'
+import { auth, firestore, rdb } from '../../../firebaseConfig'
+import CanvasFile from '../../models/CanvasFile'
+import Stroke from '../../models/Stroke'
 
-const Home = () => {
+const CanvasScreen = () => {
     const [dialogVisible, setDialogVisible] = useState(false)
     const [newCanvasName, setNewCanvasName] = useState('')
     const [files, setFiles] = useState<CanvasFile[]>([])
@@ -47,7 +47,7 @@ const Home = () => {
         return (
             <TouchableOpacity
                 style={styles.item}
-                onPress={() => router.push({ pathname: '/canvasscreen', params: { ...item } })}
+                onPress={() => router.push({ pathname: '/(tabs)/canvas/[id]', params: { id: item.id, name: item.name } })}
             >
                 <Text style={styles.fileName}>{item.name}</Text>
                 <View style={{ alignItems: 'flex-end', flex: 1 }}>
@@ -60,50 +60,50 @@ const Home = () => {
 
 
 
-const handleCreateNew = () => {
-    setDialogVisible(true)
-}
-
-const handleDialogCancel = () => {
-    setDialogVisible(false)
-    setNewCanvasName('')
-}
-
-const handleDialogSubmit = async () => {
-    setDialogVisible(false)
-    const newCanvas = {
-        name: newCanvasName,
-        createdAt: new Date().toISOString(),
-        id: Date.now().toString(),
-        creator: auth.currentUser?.displayName || 'Unknown User',
+    const handleCreateNew = () => {
+        setDialogVisible(true)
     }
-    // ...
-    const canvasDocRef = doc(collection(firestore, 'canvasFiles'), newCanvas.id)
-    setDoc(canvasDocRef, newCanvas)
-    await initializeBlankCanvas(newCanvas.id)
-    setNewCanvasName('')
-    router.push({ pathname: '/canvasscreen', params: { ...newCanvas } })
-}
 
-async function initializeBlankCanvas(canvasId: string): Promise<void> {
-  const initialRef = ref(rdb, `drawings/${canvasId}/strokes`);
-  const starterStroke: Stroke = {
-    color: '#FFFFFF', 
-    points: [],
-    createdAt: Date.now(),
-    createdBy: auth.currentUser?.displayName || 'unknown',
-    strokeWidth: 5,
-  };
+    const handleDialogCancel = () => {
+        setDialogVisible(false)
+        setNewCanvasName('')
+    }
 
-  await set(initialRef, {
-    init: starterStroke,
-  });
-}
+    const handleDialogSubmit = async () => {
+        setDialogVisible(false)
+        const newCanvas = {
+            name: newCanvasName,
+            createdAt: new Date().toISOString(),
+            id: Date.now().toString(),
+            creator: auth.currentUser?.displayName || 'Unknown User',
+        }
+        // ...
+        const canvasDocRef = doc(collection(firestore, 'canvasFiles'), newCanvas.id)
+        setDoc(canvasDocRef, newCanvas)
+        await initializeBlankCanvas(newCanvas.id)
+        setNewCanvasName('')
+        router.push({ pathname: '/(tabs)/canvas/[id]', params: { id: newCanvas.id, name: newCanvas.name } })
+    }
 
-return (
-    <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>All Canvas Files</Text>
-        {isLoading ? (
+    async function initializeBlankCanvas(canvasId: string): Promise<void> {
+        const initialRef = ref(rdb, `drawings/${canvasId}/strokes`);
+        const starterStroke: Stroke = {
+            color: '#FFFFFF',
+            points: [],
+            createdAt: Date.now(),
+            createdBy: auth.currentUser?.displayName || 'unknown',
+            strokeWidth: 5,
+        };
+
+        await set(initialRef, {
+            init: starterStroke,
+        });
+    }
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>All Canvas Files</Text>
+            {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color="#4f8cff" />
                     <Text style={{ color: '#4f8cff', marginTop: 12 }}>Loading...</Text>
@@ -117,10 +117,10 @@ return (
                     ListEmptyComponent={<Text style={styles.empty}>No files found.</Text>}
                 />
             )}
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
-            <Text style={styles.createButtonText}>Create New</Text>
-        </TouchableOpacity>
-        <Modal
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
+                <Text style={styles.createButtonText}>Create New</Text>
+            </TouchableOpacity>
+            <Modal
                 visible={dialogVisible}
                 transparent
                 animationType="fade"
@@ -167,11 +167,11 @@ return (
                     </View>
                 </View>
             </Modal>
-    </SafeAreaView>
-)
+        </SafeAreaView>
+    )
 }
 
-export default Home;
+export default CanvasScreen;
 
 const styles = StyleSheet.create({
     container: {

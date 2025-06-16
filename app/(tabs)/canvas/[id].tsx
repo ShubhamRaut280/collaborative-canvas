@@ -14,11 +14,11 @@ import {
 } from "react-native-gesture-handler";
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { onChildAdded, push, ref } from 'firebase/database';
-import { auth, rdb } from '../firebaseConfig';
-import Stroke from "./models/Stroke";
-import { getSmoothPath } from "./utils/skia";
-import { remove } from 'firebase/database';
+import { onChildAdded, push, ref, remove } from 'firebase/database';
+import { auth, rdb } from '../../../firebaseConfig';
+import Stroke from "../../models/Stroke";
+import { getSmoothPath } from "../../utils/skia";
+
 
 const canvasBackgroundColor = "#fff";
 const thicknessOptions = [5, 10, 20, 30];

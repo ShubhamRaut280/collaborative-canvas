@@ -19,9 +19,7 @@ const registerStrings = {
     buttonText: 'Create Account',
     extraButton: "Already have an account?",
 }
-
 const Login = () => {
-    const router = useRouter();
 
 
     const [email, setEmail] = useState('')
@@ -31,17 +29,8 @@ const Login = () => {
     const [isLogin, setIsLogin] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
 
-
-
-    useEffect(() => {
-        const checkUser = async () => {
-            if(auth.currentUser?.displayName) {
-                router.replace('/home');
-            }
-        }
-        checkUser();
-    }, []);
-
+    
+   
 
 
     const validateCredentials = () => {
@@ -82,7 +71,6 @@ const Login = () => {
                     alert(`Welcome back! ${user.displayName}`);
                     setData('userName', user.displayName || 'User');
                     setData('userEmail', user.email || 'No email provided');
-                    router.replace('/home');
                 })
                 .catch((error) => {
                     alert(`Error: ${error.message}`);
