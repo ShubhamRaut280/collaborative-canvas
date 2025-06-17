@@ -13,11 +13,11 @@ import {
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
 
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { onChildAdded, push, ref, remove } from 'firebase/database';
-import { auth, rdb } from '../firebaseConfig';
 import Stroke from '../app/models/Stroke';
 import { getSmoothPath } from "../app/utils/skia";
+import { auth, rdb } from '../firebaseConfig';
 
 
 
@@ -39,7 +39,7 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
     const paletteColors = ["red", "green", "blue", "yellow", "white"];
     const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
     const [paths, setPaths] = useState<Stroke[]>([]);
-    const [curr, setCurr] = useState<number>(0);
+    const [curr, setCurr] = useState<number>(0); // Number of visible paths
     const currentPath = useRef<Stroke | null>(null);
     const [isEraserActive, setIsEraserActive] = useState(false);
     const [strokeWidth, setStrokeWidth] = useState(thicknessOptions[0]);
@@ -102,11 +102,15 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
         .minDistance(1);
 
     const undoLast = () => {
-        setCurr((prev) => (prev > 0 ? prev - 1 : 0));
+        if (curr > 0) {
+            setCurr(curr - 1);
+        }
     };
 
     const redoLast = () => {
-        setCurr((prev) => (prev < paths.length ? prev + 1 : prev));
+        if (curr < paths.length) {
+            setCurr(curr + 1);
+        }
     };
 
     const handleEraser = () => {
