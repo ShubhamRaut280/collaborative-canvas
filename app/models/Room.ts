@@ -4,6 +4,7 @@ interface Room {
     createdAt: string;
     creator: string;
     members: Member[] | [];
+    code: string;
 }
 
 interface Member {

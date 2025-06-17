@@ -2,17 +2,17 @@ import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { auth, firestore, rdb } from '../../firebaseConfig'
 import Stroke from '../models/Stroke'
-import { Room, Member } from '../models/Room'
+import { Room } from '../models/Room'
 import NewItemDialog from '@/components/NewItemDialog'
 
 export default function ChatRoom() {
   const [dialogVisible, setDialogVisible] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
   const [rooms, setRooms] = useState<Room[]>([])
-  const [isLoading, setIsLoading] = useState(true) // <-- Add loading state
+  const [isLoading, setIsLoading] = useState(true) 
   const router = useRouter()
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function ChatRoom() {
     return (
       <TouchableOpacity
         style={styles.item}
-        onPress={() => router.push({ pathname: '/canvas', params: { id: item.id, name: item.name } })}
+        onPress={() => router.push({ pathname: '/screens/chatpage', params: { id: item.id, data: JSON.stringify(item) } })}
       >
         <Text style={styles.fileName}>{item.name}</Text>
         <View style={{ alignItems: 'flex-end', flex: 1 }}>
@@ -73,15 +73,16 @@ export default function ChatRoom() {
   const handleDialogSubmit = async () => {
     setDialogVisible(false)
     const newRoom = {
-      id: Date.now().toString(),
+      id : new Date().getTime().toString(),
+      code: Math.floor(10000 + Math.random() * 90000).toString(),
       name: newRoomName,
       createdAt: new Date().toISOString(),
       creator: auth.currentUser?.displayName || 'Unknown User',
       members: [
-        {
-          id: auth.currentUser?.uid || 'unknown',
-          name: auth.currentUser?.displayName || 'Unknown User'
-        }
+      {
+        id: auth.currentUser?.uid || 'unknown',
+        name: auth.currentUser?.displayName || 'Unknown User'
+      }
       ]
     }
     // ...
@@ -89,7 +90,7 @@ export default function ChatRoom() {
     setDoc(roomDocRef, newRoom)
     await initializeBlankCanvas(newRoom.id)
     setNewRoomName('')
-    // router.push({ pathname: '/canvas', params: { id: newCanvas.id, name: newCanvas.name } })
+    router.push({ pathname: '/screens/chatpage', params: { id: newRoom.id, data: JSON.stringify(newRoom) } })
   }
 
   async function initializeBlankCanvas(canvasId: string): Promise<void> {
