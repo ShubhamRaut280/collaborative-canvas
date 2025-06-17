@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const ChatScreen = () => {
+export default function Chat(){
   return (
     <View>
       <Text>Chat</Text>
@@ -9,6 +9,5 @@ const ChatScreen = () => {
   )
 }
 
-export default ChatScreen
 
 const styles = StyleSheet.create({})

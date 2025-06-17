@@ -1,9 +1,10 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../firebaseConfig';
-import { useRouter } from 'expo-router';
-import { setData, getData } from './db/userdata';
+import { setData } from './db/userdata';
+
+export const unstable_settings = { headerShown: false };
 
 
 const loginStrings = {
@@ -153,6 +154,7 @@ const Login = () => {
 }
 
 export default Login
+
 
 const styles = StyleSheet.create({
     card: {

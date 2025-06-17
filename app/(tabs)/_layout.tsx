@@ -3,22 +3,33 @@ import { Tabs } from 'expo-router';
 
 export default function TabsLayout() {
   return (
-    <Tabs initialRouteName="canvas/index">
+    <Tabs >
       <Tabs.Screen
-        name="canvas/index" 
+        name="index" 
         options={{
-          title: 'Canvas List',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="color-palette" size={size} color={color} />
+            <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="chat/index"
+        name="chat"
         options={{
           title: 'Chat',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
+          ),
+        }}
+      />
+       <Tabs.Screen
+        name="canvas"
+        options={{
+          href: null,
+          headerShown: false,
+          title: 'Canvas',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="color-palette" size={size} color={color} />
           ),
         }}
       />

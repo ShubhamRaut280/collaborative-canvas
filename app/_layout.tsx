@@ -15,11 +15,11 @@ export default function RootLayout() {
       if (!user && !inAuthGroup) {
         router.replace('/login');
       } else if (user && inAuthGroup) {
-        router.replace('/(tabs)/canvas');
+        router.replace('/(tabs)');
       }
     });
     return unsubscribe;
-  }, [segments]);
+  }, [router, segments]);
 
   if (isLoading) {
     return (
@@ -30,7 +30,9 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
+    <Stack >
+      
+      <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

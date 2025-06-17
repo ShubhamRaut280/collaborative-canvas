@@ -3,11 +3,11 @@ import { ref, set } from 'firebase/database'
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { auth, firestore, rdb } from '../../../firebaseConfig'
-import CanvasFile from '../../models/CanvasFile'
-import Stroke from '../../models/Stroke'
+import { auth, firestore, rdb } from '../../firebaseConfig'
+import CanvasFile from '../models/CanvasFile'
+import Stroke from '../models/Stroke'
 
-const CanvasScreen = () => {
+const Home = () => {
     const [dialogVisible, setDialogVisible] = useState(false)
     const [newCanvasName, setNewCanvasName] = useState('')
     const [files, setFiles] = useState<CanvasFile[]>([])
@@ -47,7 +47,7 @@ const CanvasScreen = () => {
         return (
             <TouchableOpacity
                 style={styles.item}
-                onPress={() => router.push({ pathname: '/(tabs)/canvas/[id]', params: { id: item.id, name: item.name } })}
+                onPress={() => router.push({ pathname: '/canvas', params: { id: item.id, name: item.name } })}
             >
                 <Text style={styles.fileName}>{item.name}</Text>
                 <View style={{ alignItems: 'flex-end', flex: 1 }}>
@@ -82,7 +82,7 @@ const CanvasScreen = () => {
         setDoc(canvasDocRef, newCanvas)
         await initializeBlankCanvas(newCanvas.id)
         setNewCanvasName('')
-        router.push({ pathname: '/(tabs)/canvas/[id]', params: { id: newCanvas.id, name: newCanvas.name } })
+        router.push({ pathname: '/canvas', params: { id: newCanvas.id, name: newCanvas.name } })
     }
 
     async function initializeBlankCanvas(canvasId: string): Promise<void> {
@@ -102,7 +102,6 @@ const CanvasScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>All Canvas Files</Text>
             {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color="#4f8cff" />
@@ -171,7 +170,7 @@ const CanvasScreen = () => {
     )
 }
 
-export default CanvasScreen;
+export default Home;
 
 const styles = StyleSheet.create({
     container: {
@@ -181,12 +180,11 @@ const styles = StyleSheet.create({
         paddingTop: 24,
     },
     title: {
-        fontSize: 26,
+        fontSize: 16,
         fontWeight: 'bold',
         marginBottom: 18,
-        marginTop: 20,
         color: '#222',
-        alignSelf: 'center',
+        alignSelf: 'flex-start',
     },
     list: {
         paddingBottom: 100,

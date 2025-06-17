@@ -15,18 +15,21 @@ import {
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { onChildAdded, push, ref, remove } from 'firebase/database';
-import { auth, rdb } from '../../../firebaseConfig';
-import Stroke from "../../models/Stroke";
-import { getSmoothPath } from "../../utils/skia";
+import { auth, rdb } from '../../firebaseConfig';
+import Stroke from "../models/Stroke";
+import { getSmoothPath } from "../utils/skia";
 
 
 const canvasBackgroundColor = "#fff";
 const thicknessOptions = [5, 10, 20, 30];
 
+
 export default function CanvasScreen() {
+
     const { width, height } = Dimensions.get("window");
     const router = useRouter();
-    const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
+
+    const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
 
     const paletteColors = ["red", "green", "blue", "yellow", "white"];
     const [activePaletteColorIndex, setActivePaletteColorIndex] = useState(0);
