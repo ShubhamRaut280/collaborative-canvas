@@ -102,6 +102,7 @@ const Home = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Your Canvas Files</Text>
             {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color="#4f8cff" />
@@ -180,9 +181,10 @@ const styles = StyleSheet.create({
         paddingTop: 24,
     },
     title: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 18,
+        marginBottom: 10,
+        marginTop: 20,
         color: '#222',
         alignSelf: 'flex-start',
     },
@@ -192,7 +194,7 @@ const styles = StyleSheet.create({
     item: {
         backgroundColor: '#fff',
         borderRadius: 10,
-        padding: 18,
+        padding: 15,
         marginBottom: 14,
         flexDirection: 'row',
         justifyContent: 'space-between',

@@ -5,8 +5,11 @@ export default function TabsLayout() {
   return (
     <Tabs >
       <Tabs.Screen
-        name="index" 
+        name="index"
         options={{
+
+          headerShown: false,
+        
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -16,13 +19,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="chat"
         options={{
+          headerShown: false,
           title: 'Chat',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
       />
-       <Tabs.Screen
+      <Tabs.Screen
         name="canvas"
         options={{
           href: null,
