@@ -4,31 +4,31 @@ import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { auth, firestore, rdb } from '../../firebaseConfig'
-import CanvasFile from '../models/CanvasFile'
 import Stroke from '../models/Stroke'
+import { Room, Member } from '../models/Room'
 
-const Home = () => {
+export default function ChatRoom() {
     const [dialogVisible, setDialogVisible] = useState(false)
-    const [newCanvasName, setNewCanvasName] = useState('')
-    const [files, setFiles] = useState<CanvasFile[]>([])
+    const [newRoomName, setNewRoomName] = useState('')
+    const [rooms, setRooms] = useState<Room[]>([])
     const [isLoading, setIsLoading] = useState(true) // <-- Add loading state
     const router = useRouter()
 
     useEffect(() => {
         setIsLoading(true)
-        const unsubscribe = onSnapshot(collection(firestore, 'canvasFiles'), (snapshot) => {
-            const filesData = snapshot.docs.map(doc => ({
+        const unsubscribe = onSnapshot(collection(firestore, 'rooms'), (snapshot) => {
+            const roomsData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            })) as CanvasFile[]
-            setFiles(filesData.filter(file => file.creator === auth.currentUser?.displayName)) // Ensure all fields are present
-            setIsLoading(false) // <-- Set loading false after data is loaded
+            })) as Room[]
+            setRooms(roomsData.filter(room => room.creator === auth.currentUser?.displayName))
+            setIsLoading(false)
         })
 
         return () => unsubscribe()
     }, [])
 
-    const renderItem = ({ item }: { item: CanvasFile }) => {
+    const renderItem = ({ item }: { item: Room }) => {
         const formattedDate = (() => {
             const date = new Date(item.createdAt);
 
@@ -47,7 +47,7 @@ const Home = () => {
         return (
             <TouchableOpacity
                 style={styles.item}
-                onPress={() => router.push({ pathname: '/screens/canvas', params: { id: item.id, name: item.name } })}
+                onPress={() => router.push({ pathname: '/canvas', params: { id: item.id, name: item.name } })}
             >
                 <Text style={styles.fileName}>{item.name}</Text>
                 <View style={{ alignItems: 'flex-end', flex: 1 }}>
@@ -66,23 +66,29 @@ const Home = () => {
 
     const handleDialogCancel = () => {
         setDialogVisible(false)
-        setNewCanvasName('')
+        setNewRoomName('')
     }
 
     const handleDialogSubmit = async () => {
         setDialogVisible(false)
-        const newCanvas = {
-            name: newCanvasName,
-            createdAt: new Date().toISOString(),
+        const newRoom = {
             id: Date.now().toString(),
+            name: newRoomName,
+            createdAt: new Date().toISOString(),
             creator: auth.currentUser?.displayName || 'Unknown User',
+            members: [
+              {
+                id: auth.currentUser?.uid || 'unknown',
+                name: auth.currentUser?.displayName || 'Unknown User'
+              }
+            ]
         }
         // ...
-        const canvasDocRef = doc(collection(firestore, 'canvasFiles'), newCanvas.id)
-        setDoc(canvasDocRef, newCanvas)
-        await initializeBlankCanvas(newCanvas.id)
-        setNewCanvasName('')
-        router.push({ pathname: '/screens/canvas', params: { id: newCanvas.id, name: newCanvas.name } })
+        const roomDocRef = doc(collection(firestore, 'rooms'), newRoom.id)
+        setDoc(roomDocRef, newRoom)
+        await initializeBlankCanvas(newRoom.id)
+        setNewRoomName('')
+        // router.push({ pathname: '/canvas', params: { id: newCanvas.id, name: newCanvas.name } })
     }
 
     async function initializeBlankCanvas(canvasId: string): Promise<void> {
@@ -102,7 +108,7 @@ const Home = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Your Canvas Files</Text>
+            <Text style={styles.title}>Your Chat Rooms</Text>
             {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator size="large" color="#4f8cff" />
@@ -110,15 +116,15 @@ const Home = () => {
                 </View>
             ) : (
                 <FlatList
-                    data={files}
+                    data={rooms}
                     keyExtractor={item => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={styles.list}
-                    ListEmptyComponent={<Text style={styles.empty}>No files found.</Text>}
+                    ListEmptyComponent={<Text style={styles.empty}>No rooms found.</Text>}
                 />
             )}
             <TouchableOpacity style={styles.createButton} onPress={handleCreateNew}>
-                <Text style={styles.createButtonText}>Create New</Text>
+                <Text style={styles.createButtonText}>Create New Room</Text>
             </TouchableOpacity>
             <Modal
                 visible={dialogVisible}
@@ -128,12 +134,12 @@ const Home = () => {
             >
                 <View style={modalStyles.overlay}>
                     <View style={modalStyles.dialog}>
-                        <Text style={modalStyles.title}>Create New Canvas</Text>
-                        <Text style={modalStyles.description}>Enter a name for your new canvas</Text>
+                        <Text style={modalStyles.title}>Create New Room</Text>
+                        <Text style={modalStyles.description}>Enter a name for room</Text>
                         <TextInput
-                            placeholder="Canvas name"
-                            value={newCanvasName}
-                            onChangeText={setNewCanvasName}
+                            placeholder="Room name"
+                            value={newRoomName}
+                            onChangeText={setNewRoomName}
                             style={modalStyles.input}
                             placeholderTextColor="#b0b3b8"
                             autoFocus={Platform.OS !== 'web'}
@@ -154,11 +160,11 @@ const Home = () => {
                                     { backgroundColor: pressed ? '#e6f0ff' : 'transparent' }
                                 ]}
                                 onPress={handleDialogSubmit}
-                                disabled={!newCanvasName.trim()}
+                                disabled={!newRoomName.trim()}
                             >
                                 <Text style={[
                                     modalStyles.createText,
-                                    { color: !newCanvasName.trim() ? '#b0b3b8' : '#4f8cff' }
+                                    { color: !newRoomName.trim() ? '#b0b3b8' : '#4f8cff' }
                                 ]}>
                                     Create
                                 </Text>
@@ -170,8 +176,6 @@ const Home = () => {
         </SafeAreaView>
     )
 }
-
-export default Home;
 
 const styles = StyleSheet.create({
     container: {

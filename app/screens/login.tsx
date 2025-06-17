@@ -1,8 +1,8 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../firebaseConfig';
-import { setData } from './db/userdata';
+import { auth } from '../../firebaseConfig';
+import { setData } from '../db/userdata';
 
 export const unstable_settings = { headerShown: false };
 

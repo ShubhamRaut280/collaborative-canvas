@@ -17,25 +17,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="room"
         options={{
           headerShown: false,
-          title: 'Chat',
+          title: 'Chat Room',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
-      />
-      <Tabs.Screen
-        name="canvas"
-        options={{
-          href: null,
-          headerShown: false,
-          title: 'Canvas',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="color-palette" size={size} color={color} />
-          ),
-        }}
+    
       />
     </Tabs>
   );
