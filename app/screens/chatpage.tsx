@@ -1,9 +1,11 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
-import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks'
-import { Room } from '../models/Room'
-import { Ionicons } from '@expo/vector-icons'
 import DrawingCanvas from '@/components/DrawingCanvas'
+import FloatingTabSwitch from '@/components/FloatingTabSwitch'
+import { Ionicons } from '@expo/vector-icons'
+import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks'
+import React, { useState } from 'react'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Room } from '../models/Room'
 
 
 const canvasBackgroundColor = "#fff";
@@ -11,13 +13,17 @@ const canvasBackgroundColor = "#fff";
 export default function ChatPage() {
     const { id, data } = useLocalSearchParams();
     const roomDetails = data ? JSON.parse(data as string) as Room : null;
+    const [activeTab, setActiveTab] = useState<'canvas' | 'chat'>('canvas');
+    const [hasUnread, setHasUnread] = useState(true); // simulate red dot
 
     const router = useRouter();
 
 
     return (
+
+        <SafeAreaView style={{ flex: 1 }}>
+
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#222" />
@@ -25,22 +31,44 @@ export default function ChatPage() {
                 <Text style={styles.headerTitle}>{roomDetails?.name || 'Canvas'}</Text>
             </View>
 
-            <View style={styles.shareMsg}>
-                <Text style={styles.shareText}>Use </Text>
-                <Text style={{ fontWeight: 'bold' }}>{roomDetails?.code || ''}</Text>
-                <Text style={styles.shareText}> code to invite others</Text>
+
+
+            <View style={{ flex: 1, backgroundColor: canvasBackgroundColor }}>
+                {activeTab === 'canvas' ? (
+                    <DrawingCanvas
+                        id={roomDetails?.id || id as string}
+                        name={roomDetails?.name || 'Canvas'}
+                        isRoom={true}
+                    />
+
+                ) : (
+                    <Text style={{ textAlign: 'center', marginTop: 20 }}>Chat feature coming soon!</Text>
+                )}
             </View>
 
-            <DrawingCanvas
-                id={roomDetails?.id || id as string}
-                name={roomDetails?.name || 'Canvas'}
-                isRoom={true}
+
+            <FloatingTabSwitch
+                onTabChange={(tab) => {
+                    setActiveTab(tab);
+                    if (tab === 'chat') {
+                        setHasUnread(false); // clear red dot when switching to chat
+                    }
+                }}
+                hasUnread={hasUnread}
             />
 
-
-
+            {shareMessage(roomDetails?.code || '')}
         </View>
+        </SafeAreaView>
     );
+}
+
+const shareMessage = (code: string) => {
+    return <View style={styles.shareMsg}>
+        <Text style={styles.shareText}>Use </Text>
+        <Text style={{ fontWeight: 'bold' }}>{code}</Text>
+        <Text style={styles.shareText}> code to invite others</Text>
+    </View>;
 }
 
 const styles = StyleSheet.create({
@@ -66,7 +94,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 48,
+        paddingTop: 10,
         paddingBottom: 16,
         paddingHorizontal: 16,
         backgroundColor: '#fff',
