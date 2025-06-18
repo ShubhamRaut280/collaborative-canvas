@@ -17,6 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "jsEngine": "hermes",
       "package": "com.anonymous.canvaapp"
     },
     "web": {

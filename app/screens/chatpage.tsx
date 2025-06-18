@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Room } from '../models/Room'
 import { Message } from '../models/Message'
 import { auth, rdb } from '@/firebaseConfig'
-import { serverTimestamp } from 'firebase/firestore'
 import ChatScreenComp from '@/components/ChatScreenComp'
 import { onChildAdded, push, ref, set } from 'firebase/database'
 
