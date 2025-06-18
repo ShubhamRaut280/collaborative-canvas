@@ -38,18 +38,27 @@ const ChatScreenComp = ({ messages, onSend }: Props) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.list}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-      />
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior="padding"
+        keyboardVerticalOffset={88}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        />
+
+      </KeyboardAvoidingView>
+
       <KeyboardAvoidingView
         behavior="position"
-        style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
         keyboardVerticalOffset={88}
       >
         <View style={styles.inputRow}>
