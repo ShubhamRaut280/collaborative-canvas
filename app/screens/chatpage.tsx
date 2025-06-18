@@ -19,6 +19,7 @@ export default function ChatPage() {
     const roomDetails = data ? (JSON.parse(data as string) as Room) : null
     const [activeTab, setActiveTab] = useState<'canvas' | 'chat'>('canvas')
     const [hasUnread, setHasUnread] = useState(false)
+
     const [messages, setMessages] = useState<Message[]>([])
     const router = useRouter()
 
@@ -41,7 +42,7 @@ export default function ChatPage() {
                 newMessage?.sender !== auth.currentUser?.displayName &&
                 activeTab !== 'chat'
             ) {
-                setHasUnread(true)
+                setHasUnread(false)
             }
         }
 
@@ -91,6 +92,7 @@ export default function ChatPage() {
                 {/* Floating tab switch */}
                 <FloatingTabSwitch
                     onTabChange={(tab) => {
+                        
                         setActiveTab(tab)
                         if (tab === 'chat') setHasUnread(false)
                     }}
