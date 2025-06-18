@@ -1,10 +1,7 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Path as SvgPath } from 'react-native-svg';
 
-import {
-    Canvas,
-    Path,
-} from "@shopify/react-native-skia";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -13,10 +10,10 @@ import {
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
 
+import getSvgPathFromPoints from "@/app/utils/svgPath";
 import { useRouter } from 'expo-router';
 import { onChildAdded, push, ref, remove } from 'firebase/database';
 import Stroke from '../app/models/Stroke';
-import { getSmoothPath } from "../app/utils/skia";
 import { auth, rdb } from '../firebaseConfig';
 
 
@@ -218,19 +215,21 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
             <GestureHandlerRootView>
                 <View style={{ height, width }}>
                     <GestureDetector gesture={pan}>
-                        <Canvas style={{ flex: 8 }}>
-                            {paths.slice(0, curr).map((p, index) =>
-                                Array.isArray(p.points) && p.points.length > 1 ? (
-                                    <Path
+                        <Svg style={{ flex: 1, backgroundColor: canvasBackgroundColor }}>
+                            {paths.slice(0, curr).map((stroke, index) =>
+                                Array.isArray(stroke.points) && stroke.points.length > 1 ? (
+                                    <SvgPath
                                         key={index}
-                                        path={getSmoothPath(p.points)}
-                                        strokeWidth={p.strokeWidth || 5}
-                                        style="stroke"
-                                        color={p.color}
+                                        d={getSvgPathFromPoints(stroke.points)}
+                                        stroke={stroke.color}
+                                        strokeWidth={stroke.strokeWidth}
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                     />
                                 ) : null
                             )}
-                        </Canvas>
+                        </Svg>
                     </GestureDetector>
                     <View style={{ padding: 10, flex: 1, backgroundColor: "#edede9" }}>
                         {/* Remove paletteVisible from here */}
