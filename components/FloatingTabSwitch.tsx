@@ -70,24 +70,24 @@ export default function FloatingTabSwitch({ onTabChange, hasUnread }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 30,
-    flexDirection: 'row',
-    padding: 8,
-    elevation: 12,
-    marginBottom: 25,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
-    zIndex: 999,
-    width: 120,
-    justifyContent: 'space-between',
-  },
+container: {
+  position: 'absolute',
+  bottom: 120,
+  right: 5,
+  backgroundColor: '#fff',
+  borderRadius: 30,
+  flexDirection: 'row',
+  padding: 8,
+  elevation: 12,
+  shadowColor: '#000',
+  shadowOpacity: 0.18,
+  shadowOffset: { width: 0, height: 3 },
+  shadowRadius: 10,
+  zIndex: 999,
+  width: 120,
+  justifyContent: 'space-between',
+},
+
   iconButton: {
     width: 48,
     height: 48,
