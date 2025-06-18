@@ -72,7 +72,7 @@ export default function FloatingTabSwitch({ onTabChange, hasUnread }: Props) {
 const styles = StyleSheet.create({
 container: {
   position: 'absolute',
-  bottom: 120,
+  bottom: 150,
   right: 5,
   backgroundColor: '#fff',
   borderRadius: 30,

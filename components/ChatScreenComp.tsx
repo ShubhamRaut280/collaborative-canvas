@@ -1,7 +1,7 @@
 import { Message } from '@/app/models/Message';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '@/firebaseConfig';
 
 type Props = {
@@ -47,19 +47,25 @@ const ChatScreenComp = ({ messages, onSend }: Props) => {
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={handleSend}
-          returnKeyType="send"
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={!input.trim()}>
+      <KeyboardAvoidingView
+        behavior="position"
+        style={{ position: 'absolute', bottom: 20, left: 0, right: 0 }}
+        keyboardVerticalOffset={88}
+      >
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            value={input}
+            onChangeText={setInput}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={!input.trim()}>
             <Ionicons name="send" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };
