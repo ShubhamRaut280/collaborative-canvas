@@ -213,7 +213,7 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
             )}
 
             <GestureHandlerRootView>
-                <View style={{ height, width }}>
+                <View style={{ flex : 1 }}>
                     <GestureDetector gesture={pan}>
                         <Svg style={{ flex: 1, backgroundColor: canvasBackgroundColor }}>
                             {paths.slice(0, curr).map((stroke, index) =>
@@ -231,9 +231,6 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
                             )}
                         </Svg>
                     </GestureDetector>
-                    <View style={{ padding: 10, flex: 1, backgroundColor: "#edede9" }}>
-                        {/* Remove paletteVisible from here */}
-                    </View>
                 </View>
             </GestureHandlerRootView>
             <StatusBar style="auto" />
