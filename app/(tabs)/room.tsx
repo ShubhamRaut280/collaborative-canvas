@@ -88,13 +88,14 @@ export default function ChatRoom() {
     // ...
     const roomDocRef = doc(collection(firestore, 'rooms'), newRoom.id)
     setDoc(roomDocRef, newRoom)
-    await initializeBlankCanvas(newRoom.id)
+    await initializeBlankCanvas(newRoom.id, newRoom.code)
     setNewRoomName('')
     router.push({ pathname: '/screens/chatpage', params: { id: newRoom.id, data: JSON.stringify(newRoom) } })
   }
 
-  async function initializeBlankCanvas(canvasId: string): Promise<void> {
+  async function initializeBlankCanvas(canvasId: string, roomcode : string): Promise<void> {
     const initialRef = ref(rdb, `drawings/${canvasId}/strokes`);
+    const chatRef = ref(rdb, `rooms/${roomcode}/chat`);
     const starterStroke: Stroke = {
       color: '#FFFFFF',
       points: [],
@@ -102,6 +103,10 @@ export default function ChatRoom() {
       createdBy: auth.currentUser?.displayName || 'unknown',
       strokeWidth: 5,
     };
+
+    await set(chatRef, {
+      messages: [],
+    });
 
     await set(initialRef, {
       init: starterStroke,

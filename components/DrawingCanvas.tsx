@@ -159,7 +159,6 @@ export default function DrawingCanvas({ id, name, isRoom }: Props) {
                 <TouchableOpacity onPress={() => {
                     setPaths([]);
                     setCurr(0);
-                    // Remove all strokes from Firebase Realtime Database
                     remove(strokesRef);
 
                 }}>
