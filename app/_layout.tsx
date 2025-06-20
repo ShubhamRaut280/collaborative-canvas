@@ -1,7 +1,10 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { auth } from '../firebaseConfig'; 
+import { auth } from '../firebaseConfig';
+import { Provider } from 'react-redux';
+import { store } from './redux/store/store';
+
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,9 +33,12 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="/screens/login" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
+    <Provider store={store}>
+
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="/screens/login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </Provider>
   );
 }

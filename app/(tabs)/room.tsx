@@ -2,32 +2,27 @@ import NewItemDialog from '@/components/NewItemDialog';
 import { useRouter } from 'expo-router';
 import { ref, set } from 'firebase/database';
 import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, firestore, rdb } from '../../firebaseConfig';
 import { Room } from '../models/Room';
 import Stroke from '../models/Stroke';
+import { AppDispatch, RootState } from '../redux/store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { subscribeToRooms } from '../redux/actions/roomActions';
+import { router } from 'expo-router';
 
 export default function ChatRoom() {
   const [dialogVisible, setDialogVisible] = useState<'create' | 'join' | null>(null);
   const [optionModalVisible, setOptionModalVisible] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
-  React.useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = onSnapshot(collection(firestore, 'rooms'), (snapshot) => {
-      const roomsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Room[];
-      setRooms(roomsData.filter(room => room.creator === auth.currentUser?.displayName || room.members.some(member => member.id === auth.currentUser?.uid)));
-      setIsLoading(false);
-    });
+  const { rooms, loading: isLoading } = useSelector((state: RootState) => state.rooms);
+  const dispatch = useDispatch<AppDispatch>();
 
-    return () => unsubscribe();
+  useEffect(() => {
+    const unsub = dispatch(subscribeToRooms());
+    return unsub; // cleanup
   }, []);
 
   const renderItem = ({ item }: { item: Room }) => {
@@ -84,15 +79,15 @@ export default function ChatRoom() {
       id: auth.currentUser?.uid || 'unknown',
       name: auth.currentUser?.displayName || 'Unknown User'
     }];
-    
+
     await setDoc(doc(firestore, 'rooms', roomId), { ...roomData, members: updatedMembers }, { merge: true });
-    
-    
+
+
     setDialogVisible(null);
 
-    
+
     await initializeBlankCanvas(roomId, roomData.code);
-    
+
     setNewRoomName('');
     setDialogVisible(null);
   };
