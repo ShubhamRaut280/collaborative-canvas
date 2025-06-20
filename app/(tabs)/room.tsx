@@ -9,7 +9,7 @@ import { Room } from '../models/Room';
 import Stroke from '../models/Stroke';
 import { AppDispatch, RootState } from '../redux/store/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { subscribeToRooms } from '../redux/actions/roomActions';
+import { subscribeToRooms } from '../redux/actions/generalActions';
 import { router } from 'expo-router';
 
 export default function ChatRoom() {

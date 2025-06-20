@@ -1,32 +1,26 @@
 import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { collection, doc, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { auth, firestore, rdb } from '../../firebaseConfig'
 import CanvasFile from '../models/CanvasFile'
 import Stroke from '../models/Stroke'
 import NewItemDialog from '@/components/NewItemDialog'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../redux/store/store'
+import { subscribeToCanvasFiles } from '../redux/actions/generalActions'
 
 const Home = () => {
     const [dialogVisible, setDialogVisible] = useState(false)
     const [newCanvasName, setNewCanvasName] = useState('')
-    const [files, setFiles] = useState<CanvasFile[]>([])
-    const [isLoading, setIsLoading] = useState(true) // <-- Add loading state
+    const {canvasFiles : files, loading : isLoading} = useSelector((state : RootState) => state.canvas);
     const router = useRouter()
+    const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
-        setIsLoading(true)
-        const unsubscribe = onSnapshot(collection(firestore, 'canvasFiles'), (snapshot) => {
-            const filesData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as CanvasFile[]
-            setFiles(filesData.filter(file => file.creator === auth.currentUser?.displayName)) // Ensure all fields are present
-            setIsLoading(false) // <-- Set loading false after data is loaded
-        })
-
-        return () => unsubscribe()
+        const unsub = dispatch(subscribeToCanvasFiles());
+        return unsub;
     }, [])
 
     const renderItem = ({ item }: { item: CanvasFile }) => {
