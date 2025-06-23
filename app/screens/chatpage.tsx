@@ -10,13 +10,14 @@ import { Message } from '../models/Message'
 import { auth, rdb } from '@/firebaseConfig'
 import ChatScreenComp from '@/components/ChatScreenComp'
 import { onChildAdded, push, ref, set } from 'firebase/database'
+import NotesScreen from './notes'
 
 const canvasBackgroundColor = '#fff'
 
 export default function ChatPage() {
     const { id, data } = useLocalSearchParams()
     const roomDetails = data ? (JSON.parse(data as string) as Room) : null
-    const [activeTab, setActiveTab] = useState<'canvas' | 'chat'>('canvas')
+    const [activeTab, setActiveTab] = useState<'canvas' | 'chat' | 'notes'>('canvas')
     const [hasUnread, setHasUnread] = useState(false)
 
     const [messages, setMessages] = useState<Message[]>([])
@@ -83,7 +84,11 @@ export default function ChatPage() {
                             name={roomDetails?.name || 'Canvas'}
                             isRoom={true}
                         />
-                    ) : (
+                    ) : 
+                    activeTab === 'notes' ? (
+                        <NotesScreen/>
+                    ) : 
+                    (
                         <ChatScreenComp messages={messages} onSend={addMessage} />
                     )}
                 </View>

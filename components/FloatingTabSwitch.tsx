@@ -1,8 +1,8 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Animated, Easing, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-type Tab = 'canvas' | 'chat';
+type Tab = 'canvas' | 'chat' | 'notes';
 
 type Props = {
   onTabChange: (tab: Tab) => void;
@@ -16,7 +16,7 @@ export default function FloatingTabSwitch({ onTabChange, hasUnread }: Props) {
   const handleTabPress = (tab: Tab) => {
     if (tab !== activeTab) {
       Animated.timing(animValue, {
-        toValue: tab === 'canvas' ? 0 : 1,
+        toValue: tab === 'canvas' ? 0 : tab === 'chat' ? 1 : 2,
         duration: 260,
         easing: Easing.out(Easing.exp),
         useNativeDriver: false,
@@ -28,8 +28,8 @@ export default function FloatingTabSwitch({ onTabChange, hasUnread }: Props) {
 
   // Interpolate the animated value for the switcher
   const translateX = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [8, 64], // adjust for your icon/button width
+    inputRange: [0, 1, 2],
+    outputRange: [8, 64, 120], // adjust for your icon/button width
   });
 
   return (
@@ -65,29 +65,39 @@ export default function FloatingTabSwitch({ onTabChange, hasUnread }: Props) {
           <View style={styles.redDot} />
         )}
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconButton}
+        onPress={() => handleTabPress('notes')}
+        activeOpacity={0.8}
+      >
+        <Feather
+          name={activeTab === 'notes' ? 'file-text' : 'file'}
+          size={30}
+          color={activeTab === 'notes' ? '#fff' : '#4287f5'}
+        />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-container: {
-  position: 'absolute',
-  bottom: 150,
-  right: 5,
-  backgroundColor: '#fff',
-  borderRadius: 30,
-  flexDirection: 'row',
-  padding: 8,
-  elevation: 12,
-  shadowColor: '#000',
-  shadowOpacity: 0.18,
-  shadowOffset: { width: 0, height: 3 },
-  shadowRadius: 10,
-  zIndex: 999,
-  width: 120,
-  justifyContent: 'space-between',
-},
-
+  container: {
+    position: 'absolute',
+    top: 0,
+    right: 5,
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    flexDirection: 'row',
+    padding: 8,
+    
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    width: 176, // increased width for 3 tabs
+    justifyContent: 'space-between',
+  },
   iconButton: {
     width: 48,
     height: 48,
