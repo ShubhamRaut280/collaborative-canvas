@@ -74,6 +74,15 @@ export default function ChatPage() {
                         <Ionicons name="arrow-back" size={24} color="#222" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{roomDetails?.name || 'Canvas'}</Text>
+                     {/* Floating tab switch */}
+                <FloatingTabSwitch
+                    onTabChange={(tab) => {
+                        
+                        setActiveTab(tab)
+                        if (tab === 'chat') setHasUnread(false)
+                    }}
+                    hasUnread={hasUnread}
+                />
                 </View>
 
                 {/* Canvas or Chat */}
@@ -93,15 +102,7 @@ export default function ChatPage() {
                     )}
                 </View>
 
-                {/* Floating tab switch */}
-                <FloatingTabSwitch
-                    onTabChange={(tab) => {
-                        
-                        setActiveTab(tab)
-                        if (tab === 'chat') setHasUnread(false)
-                    }}
-                    hasUnread={hasUnread}
-                />
+               
 
                 {/* Share message */}
                 <View style={styles.shareMsg}>
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingTop: 10,
-        paddingBottom: 16,
+        paddingBottom: 20,
         paddingHorizontal: 16,
         backgroundColor: '#fff',
         elevation: 2,
@@ -140,6 +141,8 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#222',
+        flexShrink: 1, // allow text to shrink if needed
+        flexWrap: 'wrap', // enables word wrapping
     },
     shareText: {
         fontSize: 15,

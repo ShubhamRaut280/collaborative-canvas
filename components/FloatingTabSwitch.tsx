@@ -89,12 +89,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     flexDirection: 'row',
     padding: 8,
-    
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
     width: 176, // increased width for 3 tabs
     justifyContent: 'space-between',
   },
