@@ -100,6 +100,8 @@ export default function NotesScreen({ code }: NotesProps) {
 
     return (
         <View style={styles.container}>
+
+            <Text style={styles.title}>Your Notes</Text>
             <FlatList
                 data={notes}
                 keyExtractor={(item) => item.id}
@@ -253,6 +255,16 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        paddingHorizontal: 16,
+        marginTop: 20,
+        color: '#222',
+        alignSelf: 'flex-start',
     },
     addButton: {
         position: 'absolute',

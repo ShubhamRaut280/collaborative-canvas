@@ -9,7 +9,7 @@ export default function TabsLayout() {
         options={{
 
           headerShown: false,
-        
+
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
@@ -25,7 +25,18 @@ export default function TabsLayout() {
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
-    
+
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          headerShown: false,
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
+          ),
+        }}
+
       />
     </Tabs>
   );
