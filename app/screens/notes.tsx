@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Add this import
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     FlatList,
@@ -6,6 +6,7 @@ import {
     Pressable,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
@@ -48,6 +49,10 @@ export default function NotesScreen() {
   const [notes, setNotes] = useState<Note[]>(sampleNotes);
   const [addModalVisible, setAddModalVisible] = useState(false);
 
+  // State for new note form
+  const [newTitle, setNewTitle] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+
   const openModal = (note: Note) => {
     setSelectedNote(note);
     setModalVisible(true);
@@ -56,6 +61,22 @@ export default function NotesScreen() {
   const closeModal = () => {
     setModalVisible(false);
     setSelectedNote(null);
+  };
+
+  // Add note handler
+  const handleAddNote = () => {
+    if (!newTitle.trim() || !newDesc.trim()) return;
+    const newNote: Note = {
+      id: (Date.now() + Math.random()).toString(),
+      title: newTitle,
+      description: newDesc,
+      createdAt: new Date(),
+      createdBy: 'You',
+    };
+    setNotes([newNote, ...notes]);
+    setNewTitle('');
+    setNewDesc('');
+    setAddModalVisible(false);
   };
 
   const renderItem = ({ item }: { item: Note }) => (
@@ -103,7 +124,7 @@ export default function NotesScreen() {
         </View>
       </Modal>
 
-      {/* Add Note Modal (placeholder, you can implement the form) */}
+      {/* Add Note Modal */}
       <Modal
         visible={addModalVisible}
         animationType="slide"
@@ -113,10 +134,43 @@ export default function NotesScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Note</Text>
-            {/* Add your form here */}
-            <Pressable style={styles.closeButton} onPress={() => setAddModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </Pressable>
+            <TextInput
+              style={styles.input}
+              placeholder="Title"
+              value={newTitle}
+              onChangeText={setNewTitle}
+              maxLength={40}
+            />
+            <TextInput
+              style={[styles.input, { height: 80 }]}
+              placeholder="Description"
+              value={newDesc}
+              onChangeText={setNewDesc}
+              multiline
+              maxLength={200}
+            />
+            <View style={{ flexDirection: 'row', marginTop: 16 }}>
+              <Pressable
+                style={[styles.closeButton, { marginRight: 12, backgroundColor: '#aaa' }]}
+                onPress={() => {
+                  setAddModalVisible(false);
+                  setNewTitle('');
+                  setNewDesc('');
+                }}
+              >
+                <Text style={styles.closeButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.closeButton,
+                  { backgroundColor: '#4287f5', opacity: newTitle && newDesc ? 1 : 0.5 },
+                ]}
+                onPress={handleAddNote}
+                disabled={!newTitle.trim() || !newDesc.trim()}
+              >
+                <Text style={styles.closeButtonText}>Add</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -206,5 +260,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 6,
     zIndex: 10,
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: '#fafbfc',
   },
 });
