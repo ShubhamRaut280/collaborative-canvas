@@ -58,7 +58,7 @@ export default function ChatPage() {
             id: Date.now().toString(), // Use timestamp as a unique ID
             content,
             sender: auth.currentUser?.displayName || 'Anonymous',
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(),
         }
 
         push(chatRef, newMessage);
@@ -95,7 +95,7 @@ export default function ChatPage() {
                         />
                     ) : 
                     activeTab === 'notes' ? (
-                        <NotesScreen/>
+                        <NotesScreen code={roomDetails?.code || ''} />
                     ) : 
                     (
                         <ChatScreenComp messages={messages} onSend={addMessage} />
