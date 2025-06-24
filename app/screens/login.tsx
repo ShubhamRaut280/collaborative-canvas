@@ -1,118 +1,157 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import {
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    signInWithEmailAndPassword,
+    signOut,
+    updateProfile
+} from 'firebase/auth';
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Modal,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { auth } from '../../firebaseConfig';
 import { setData } from '../db/userdata';
-
-export const unstable_settings = { headerShown: false };
-
 
 const loginStrings = {
     title: 'Sign In',
     subtitle: 'Welcome back! Please login to your account.',
     buttonText: 'Login',
     extraButton: "Don't have an account?",
-}
+};
 
 const registerStrings = {
     title: 'Create Account',
     subtitle: 'Join us today! Please register to create a new account.',
     buttonText: 'Create Account',
-    extraButton: "Already have an account?",
-}
+    extraButton: 'Already have an account?',
+};
+
 const Login = () => {
-
-
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [pageTexts, setPageTexts] = useState(loginStrings)
-    const [userName, setUserName] = useState('')
-    const [isLogin, setIsLogin] = useState(true)
-    const [isLoading, setIsLoading] = useState(false)
-
-    
-   
-
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [pageTexts, setPageTexts] = useState(loginStrings);
+    const [userName, setUserName] = useState('');
+    const [isLogin, setIsLogin] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verifyingEmail, setVerifyingEmail] = useState<string>(''); // Add this state
 
     const validateCredentials = () => {
-        // Basic validation logic
         if (!email || !password) {
-            alert('Please fill in all fields.')
-            return false
+            alert('Please fill in all fields.');
+            return false;
         }
         if (!/\S+@\S+\.\S+/.test(email)) {
-            alert('Please enter a valid email address.')
-            return false
+            alert('Please enter a valid email address.');
+            return false;
         }
         if (!isLogin && !userName) {
-            alert('Please fill in all fields.')
-            return false
+            alert('Please enter your name.');
+            return false;
         }
-        return true
-    }
+        return true;
+    };
+
+    const waitForVerification = async (user: any) => {
+        setIsVerifying(true);
+        setVerifyingEmail(user.email); // Set the email being verified
+
+        const intervalId = setInterval(async () => {
+            await user.reload();
+            if (user.emailVerified) {
+                clearInterval(intervalId);
+                setIsVerifying(false);
+                setVerifyingEmail('');
+                alert('Email verified! You can now log in.');
+                await signOut(auth); // force fresh login
+                handleLogin(); // retry login
+            }
+        }, 3000); // check every 3 seconds
+
+        // Store intervalId for cleanup if needed
+        (waitForVerification as any).intervalId = intervalId;
+    };
+
+    const cancelVerification = async () => {
+        setIsVerifying(false);
+        setVerifyingEmail('');
+        if ((waitForVerification as any).intervalId) {
+            clearInterval((waitForVerification as any).intervalId);
+        }
+        await signOut(auth);
+    };
 
     const handleNewUser = async (user: any) => {
-        if (userName) {
-            setData('userName', userName);
-            setData('userEmail', user.email);
-            await updateProfile(user, { displayName: userName });
-            alert('Registration successful! You can now log in.')
-
-        } else {
-            alert('Please enter your name.');
-        }
-    }
+        await updateProfile(user, { displayName: userName });
+        await sendEmailVerification(user);
+        waitForVerification(user);
+    };
 
     const handleLogin = async () => {
         if (validateCredentials()) {
-            setIsLoading(true)
-            await signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    alert(`Welcome back! ${user.displayName}`);
-                    setData('userName', user.displayName || 'User');
-                    setData('userEmail', user.email || 'No email provided');
-                })
-                .catch((error) => {
-                    alert(`Error: ${error.message}`);
-                })
-                .finally(() => setIsLoading(false));
+            setIsLoading(true);
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                if (!user.emailVerified) {
+                    await sendEmailVerification(user);
+                    await signOut(auth);
+                    waitForVerification(user);
+                    return;
+                }
+
+                alert(`Welcome back! ${user.displayName}`);
+                setData('userName', user.displayName || 'User');
+                setData('userEmail', user.email || 'No email provided');
+            } catch (error: any) {
+                alert(`Error: ${error.message}`);
+            } finally {
+                setIsLoading(false);
+            }
         }
-    }
+    };
 
     const handleRegister = async () => {
         if (validateCredentials()) {
-            setIsLoading(true)
+            setIsLoading(true);
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                handleNewUser(auth.currentUser);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await handleNewUser(user);
             } catch (error: any) {
                 if (error.code === 'auth/email-already-in-use') {
-                    alert('This email is already in use. Please try another one.')
+                    alert('This email is already in use.');
                 } else {
-                    alert(`Error: ${error.message}`)
+                    alert(`Error: ${error.message}`);
                 }
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
         }
-    }
+    };
 
     const handleLoginSwitch = () => {
-        setIsLogin(true)
-        setPageTexts(loginStrings)
-    }
+        setIsLogin(true);
+        setPageTexts(loginStrings);
+    };
 
     const handleRegisterSwitch = () => {
-        setIsLogin(false)
-        setPageTexts(registerStrings)
-
-    }
+        setIsLogin(false);
+        setPageTexts(registerStrings);
+    };
 
     return (
         <View style={styles.card}>
             <Text style={styles.title}>{pageTexts.title}</Text>
             <Text style={styles.subtitle}>{pageTexts.subtitle}</Text>
+
             {!isLogin && (
                 <TextInput
                     style={styles.input}
@@ -139,21 +178,51 @@ const Login = () => {
                 value={password}
                 onChangeText={setPassword}
             />
+
             <TouchableOpacity style={styles.signupButton} onPress={isLogin ? handleRegisterSwitch : handleLoginSwitch}>
                 <Text style={styles.signupText}>{pageTexts.extraButton}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={isLogin ? handleLogin : handleRegister} disabled={isLoading}>
-                {isLoading ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                    <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>
-                )}
-            </TouchableOpacity>
-        </View>
-    )
-}
 
-export default Login
+            <TouchableOpacity style={styles.button} onPress={isLogin ? handleLogin : handleRegister} disabled={isLoading}>
+                {isLoading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.buttonText}>{pageTexts.buttonText}</Text>}
+            </TouchableOpacity>
+
+            {/* Verification Modal */}
+            <Modal visible={isVerifying} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={{ marginBottom: 10, fontSize: 16, fontWeight: '500' }}>
+                            Waiting for Email Verification...
+                        </Text>
+                        <Text style={{ marginBottom: 10, fontSize: 14, color: '#4f8cff' }}>
+                            Sent to: {verifyingEmail}
+                        </Text>
+                        <ActivityIndicator size="large" color="#4f8cff" />
+                        <Text style={{ marginTop: 10, fontSize: 12, color: '#666' }}>
+                            Check your inbox and click the link.
+                        </Text>
+                        <TouchableOpacity
+                            style={{
+                                marginTop: 22,
+                                backgroundColor: '#e53e3e',
+                                paddingVertical: 10,
+                                paddingHorizontal: 24,
+                                borderRadius: 8,
+                            }}
+                            onPress={cancelVerification}
+                        >
+                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 15 }}>
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+};
+
+export default Login;
 
 
 const styles = StyleSheet.create({
@@ -231,4 +300,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         letterSpacing: 1,
     },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+        elevation: 10,
+    },
+
 })

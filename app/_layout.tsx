@@ -15,9 +15,9 @@ export default function RootLayout() {
     const unsubscribe = auth.onAuthStateChanged(user => {
       setIsLoading(false);
       const inAuthGroup = segments[1] === 'login';
-      if (!user && !inAuthGroup) {
+      if (!user && !inAuthGroup ) {
         router.replace('/screens/login');
-      } else if (user && inAuthGroup) {
+      } else if (user && inAuthGroup && user.emailVerified) {
         router.replace('/(tabs)');
       }
     });
