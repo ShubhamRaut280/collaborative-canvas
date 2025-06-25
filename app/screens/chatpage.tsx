@@ -11,6 +11,8 @@ import { auth, rdb } from '@/firebaseConfig'
 import ChatScreenComp from '@/components/ChatScreenComp'
 import { onChildAdded, push, ref, set } from 'firebase/database'
 import NotesScreen from './notes'
+import { Button } from '@react-navigation/elements'
+import NewItemDialog from '@/components/NewItemDialog'
 
 const canvasBackgroundColor = '#fff'
 
@@ -19,8 +21,10 @@ export default function ChatPage() {
     const roomDetails = data ? (JSON.parse(data as string) as Room) : null
     const [activeTab, setActiveTab] = useState<'canvas' | 'chat' | 'notes'>('canvas')
     const [hasUnread, setHasUnread] = useState(false)
+    const [inviteEmail, setInviteEmail] = useState('')
 
     const [messages, setMessages] = useState<Message[]>([])
+    const [inviteDialogVisible, setInviteDialogVisible] = useState(false)
     const router = useRouter()
 
     const roomCode = roomDetails?.code || ''
@@ -54,7 +58,7 @@ export default function ChatPage() {
 
     const addMessage = async (content: string) => {
 
-        const newMessage : Message = {
+        const newMessage: Message = {
             id: Date.now().toString(), // Use timestamp as a unique ID
             content,
             sender: auth.currentUser?.displayName || 'Anonymous',
@@ -62,8 +66,24 @@ export default function ChatPage() {
         }
 
         push(chatRef, newMessage);
+
+    }
+
+    const handleInvitePress = () => {
+        setInviteDialogVisible(!inviteDialogVisible)
+    }
+
+    const handleDialogCancel = () => {
+        setInviteDialogVisible(false)
+    }
+
+    const handleDialogSubmit = async () => {
         
     }
+
+
+
+
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -74,15 +94,15 @@ export default function ChatPage() {
                         <Ionicons name="arrow-back" size={24} color="#222" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>{roomDetails?.name || 'Canvas'}</Text>
-                     {/* Floating tab switch */}
-                <FloatingTabSwitch
-                    onTabChange={(tab) => {
-                        
-                        setActiveTab(tab)
-                        if (tab === 'chat') setHasUnread(false)
-                    }}
-                    hasUnread={hasUnread}
-                />
+                    {/* Floating tab switch */}
+                    <FloatingTabSwitch
+                        onTabChange={(tab) => {
+
+                            setActiveTab(tab)
+                            if (tab === 'chat') setHasUnread(false)
+                        }}
+                        hasUnread={hasUnread}
+                    />
                 </View>
 
                 {/* Canvas or Chat */}
@@ -93,24 +113,42 @@ export default function ChatPage() {
                             name={roomDetails?.name || 'Canvas'}
                             isRoom={true}
                         />
-                    ) : 
-                    activeTab === 'notes' ? (
-                        <NotesScreen code={roomDetails?.code || ''} />
-                    ) : 
-                    (
-                        <ChatScreenComp messages={messages} onSend={addMessage} />
-                    )}
+                    ) :
+                        activeTab === 'notes' ? (
+                            <NotesScreen code={roomDetails?.code || ''} />
+                        ) :
+                            (
+                                <ChatScreenComp messages={messages} onSend={addMessage} />
+                            )}
                 </View>
 
-               
 
-                {/* Share message */}
-                <View style={styles.shareMsg}>
-                    <Text style={styles.shareText}>Use </Text>
-                    <Text style={{ fontWeight: 'bold' }}>{roomCode}</Text>
-                    <Text style={styles.shareText}> code to invite others</Text>
+
+                <View style={styles.shareContainer}>
+                    {/* Share message */}
+                    <View style={styles.shareMsg}>
+                        <Text style={styles.shareText}>Use </Text>
+                        <Text style={{ fontWeight: 'bold' }}>{roomCode}</Text>
+                        <Text style={styles.shareText}> code to invite others</Text>
+                    </View>
+                    <Button onPressIn={handleInvitePress} > Invite </Button>
+
                 </View>
             </View>
+
+            {inviteDialogVisible && (
+                <NewItemDialog
+                    dialogVisible={inviteDialogVisible}
+                    handleDialogCancel={handleDialogCancel}
+                    handleDialogSubmit={handleDialogSubmit}
+                    newName={inviteEmail}
+                    setNewName={setInviteEmail}
+                    title="Invite to Room"
+                    description="Enter a email of user."
+                    hint="email"
+                    submitButtonTitle="Invite"
+                />
+            )}
         </SafeAreaView>
     )
 }
@@ -153,6 +191,19 @@ const styles = StyleSheet.create({
     shareMsg: {
         flexDirection: 'row',
         justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 5,
+        backgroundColor: '#f0f0f0',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+
+
+    shareContainer: {
+
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
         alignItems: 'center',
         paddingVertical: 5,
         backgroundColor: '#f0f0f0',

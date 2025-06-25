@@ -211,6 +211,7 @@ export default function ChatRoom() {
         title="Create New Room"
         description="Enter a name for the room."
         hint="Room name"
+        submitButtonTitle="Create"
       />
       <NewItemDialog
         dialogVisible={dialogVisible === 'join'}
@@ -221,6 +222,7 @@ export default function ChatRoom() {
         title="Join a Room"
         description="Enter code for the room."
         hint="Room code"
+        submitButtonTitle="Join"
       />
     </SafeAreaView>
   );

@@ -11,9 +11,10 @@ type props = {
     title: string;
     description: string;
     hint: string;
+    submitButtonTitle?: string;
 }
 
-const NewItemDialog = ({ dialogVisible, handleDialogCancel, handleDialogSubmit, newName, setNewName, title, description, hint } : props) => {
+const NewItemDialog = ({ dialogVisible, handleDialogCancel, handleDialogSubmit, newName, setNewName, title, description, hint , submitButtonTitle } : props) => {
     return (
         <>
             <Modal
@@ -56,7 +57,7 @@ const NewItemDialog = ({ dialogVisible, handleDialogCancel, handleDialogSubmit, 
                                     modalStyles.createText,
                                     { color: !newName.trim() ? '#b0b3b8' : '#4f8cff' }
                                 ]}>
-                                    Create
+                                    {submitButtonTitle || 'Create'}
                                 </Text>
                             </Pressable>
                         </View>
