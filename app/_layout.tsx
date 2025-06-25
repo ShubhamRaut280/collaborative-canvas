@@ -4,6 +4,10 @@ import { ActivityIndicator, View } from 'react-native';
 import { auth } from '../firebaseConfig';
 import { Provider } from 'react-redux';
 import { store } from './redux/store/store';
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
+import { BACKGROUND_NOTIFICATION_TASK } from './tasks/InviteNotificationMonitor';
+
 
 
 export default function RootLayout() {
@@ -11,11 +15,15 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
+
   useEffect(() => {
+
+    registerNotificationTask();
+
     const unsubscribe = auth.onAuthStateChanged(user => {
       setIsLoading(false);
       const inAuthGroup = segments[1] === 'login';
-      if (!user && !inAuthGroup ) {
+      if (!user && !inAuthGroup) {
         router.replace('/screens/login');
       } else if (user && inAuthGroup && user.emailVerified) {
         router.replace('/(tabs)');
@@ -42,3 +50,21 @@ export default function RootLayout() {
     </Provider>
   );
 }
+
+
+
+async function registerNotificationTask() {
+  try {
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_NOTIFICATION_TASK);
+    if (!isRegistered) {
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
+        minimumInterval: 60 * 15, // ⏱️ run every 15 mins (minimum interval allowed)
+        stopOnTerminate: false,   // continue after app is closed
+        startOnBoot: true,        // auto start on device boot (Android only)
+      });
+      console.log('Background Notification task registered');
+    }
+  } catch (err) {
+    console.log('Failed to register background notification task:', err);
+  }
+};
