@@ -19,7 +19,6 @@ export default function RootLayout() {
 
   useEffect(() => {
 
-    registerNotificationTask();
 
     const unsubscribe = auth.onAuthStateChanged(user => {
       setIsLoading(false);
@@ -27,6 +26,8 @@ export default function RootLayout() {
       if (!user && !inAuthGroup) {
         router.replace('/screens/login');
       } else if (user && inAuthGroup && user.emailVerified) {
+
+        registerNotificationTask();
         router.replace('/(tabs)');
       }
     });
@@ -60,6 +61,7 @@ export default function RootLayout() {
 
 
 async function registerNotificationTask() {
+  console.log("Running")
   try {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_NOTIFICATION_TASK);
     if (!isRegistered) {
@@ -69,8 +71,17 @@ async function registerNotificationTask() {
         startOnBoot: true,        // auto start on device boot (Android only)
       });
       console.log('Background Notification task registered');
+      Toast.show({
+        type : 'success',
+        text1 : "Background Notification task registered successfully!"
+      })
     }
   } catch (err) {
     console.log('Failed to register background notification task:', err);
+    Toast.show({
+      type : "error",
+      text1 : "Failed to register background notification task",
+      text2 : err instanceof Error ? err.message : String(err)
+    })
   }
 };

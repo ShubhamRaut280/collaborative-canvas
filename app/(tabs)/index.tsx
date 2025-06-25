@@ -1,3 +1,4 @@
+
 import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
 import { collection, doc, setDoc } from 'firebase/firestore'
@@ -205,3 +206,5 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
 })
+
+

@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { auth } from '../../firebaseConfig';
 import { setData } from '../db/userdata';
+import Toast from 'react-native-toast-message';
 
 const loginStrings = {
     title: 'Sign In',
@@ -44,15 +45,24 @@ const Login = () => {
 
     const validateCredentials = () => {
         if (!email || !password) {
-            alert('Please fill in all fields.');
+            Toast.show({
+                type: 'error',
+                text1: 'Please fill in all fields.',
+            })
             return false;
         }
         if (!/\S+@\S+\.\S+/.test(email)) {
-            alert('Please enter a valid email address.');
+            Toast.show({
+                type: 'error',
+                text1: 'Please enter a valid email address.',
+            })
             return false;
         }
         if (!isLogin && !userName) {
-            alert('Please enter your name.');
+            Toast.show({
+                type: 'error',
+                text1: 'Please enter your name.',
+            });
             return false;
         }
         return true;
@@ -68,7 +78,10 @@ const Login = () => {
                 clearInterval(intervalId);
                 setIsVerifying(false);
                 setVerifyingEmail('');
-                alert('Email verified! You can now log in.');
+                Toast.show({
+                    type: "success",
+                    text1: 'Email verified! You can now log in.'
+                });
                 await signOut(auth); // force fresh login
                 handleLogin(); // retry login
             }
@@ -107,11 +120,14 @@ const Login = () => {
                     return;
                 }
 
-                alert(`Welcome back! ${user.displayName}`);
+                Toast.show({
+                    type: 'success'
+                    , text1: `Welcome back! ${user.displayName}`
+                });
                 setData('userName', user.displayName || 'User');
                 setData('userEmail', user.email || 'No email provided');
             } catch (error: any) {
-                alert(`Error: ${error.message}`);
+                handleFirebaseErrorTypes(error);
             } finally {
                 setIsLoading(false);
             }
@@ -127,9 +143,16 @@ const Login = () => {
                 await handleNewUser(user);
             } catch (error: any) {
                 if (error.code === 'auth/email-already-in-use') {
-                    alert('This email is already in use.');
+                    Toast.show({
+                        type: 'error',
+                        text1: 'This email is already in use. Please try logging in.',
+                    });
                 } else {
-                    alert(`Error: ${error.message}`);
+                    Toast.show({
+                        type: 'error',
+                        text1: `Error: ${error.message}`,
+                    });
+
                 }
             } finally {
                 setIsLoading(false);
@@ -316,3 +339,22 @@ const styles = StyleSheet.create({
     },
 
 })
+
+function handleFirebaseErrorTypes(error: any) {
+    if (error.code === 'auth/user-not-found') {
+        Toast.show({
+            type: 'error',
+            text1: 'User not found. Please register.',
+        });
+    } else if (error.code === 'auth/wrong-password') {
+        Toast.show({
+            type: 'error',
+            text1: 'Incorrect password. Please try again.',
+        });
+    } else {
+        Toast.show({
+            type: 'error',
+            text1: `Error: ${error.message}`,
+        });
+    }
+}
