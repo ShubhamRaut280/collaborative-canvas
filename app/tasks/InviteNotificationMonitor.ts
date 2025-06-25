@@ -7,9 +7,8 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
   try {
     // ✅ Put your background logic here
     console.log('Running background task...');
-
-    // Example: fetch or sync data, or check updates
-    // await someAsyncFunction();
+    
+    
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {

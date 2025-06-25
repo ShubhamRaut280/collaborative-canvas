@@ -13,7 +13,8 @@ import { onChildAdded, push, ref, set } from 'firebase/database'
 import NotesScreen from './notes'
 import { Button } from '@react-navigation/elements'
 import NewItemDialog from '@/components/NewItemDialog'
-
+import Invite from '../models/Invite'
+import Toast from 'react-native-toast-message'
 const canvasBackgroundColor = '#fff'
 
 export default function ChatPage() {
@@ -29,6 +30,7 @@ export default function ChatPage() {
 
     const roomCode = roomDetails?.code || ''
     const chatRef = ref(rdb, `rooms/${roomCode}/chat`)
+    const inviteRef = ref(rdb, `invites/`);
 
 
     useEffect(() => {
@@ -78,7 +80,24 @@ export default function ChatPage() {
     }
 
     const handleDialogSubmit = async () => {
-        
+        if (!inviteEmail.trim()) return
+        const inviteObj  : Invite = {
+            id: Date.now().toString(),
+            roomcode: roomDetails?.code || "",
+            email: inviteEmail.trim(),
+            status: 'pending',
+            createdAt: new Date(),
+        }
+
+        push(inviteRef, inviteObj)
+        setInviteDialogVisible(false);
+
+        Toast.show({
+            type : 'success',
+            text1 : "Invitation sent!"
+        })
+
+        setInviteEmail('');
     }
 
 

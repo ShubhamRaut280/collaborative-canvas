@@ -7,6 +7,7 @@ import { store } from './redux/store/store';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { BACKGROUND_NOTIFICATION_TASK } from './tasks/InviteNotificationMonitor';
+import Toast from 'react-native-toast-message';
 
 
 
@@ -41,13 +42,18 @@ export default function RootLayout() {
   }
 
   return (
-    <Provider store={store}>
+    <>
 
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="/screens/login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-    </Provider>
+      <Provider store={store}>
+
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="/screens/login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </Provider>
+      <Toast />
+    </>
+
   );
 }
 
