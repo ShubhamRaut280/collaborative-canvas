@@ -1,7 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
+
+import {
+  initializeNotifications
+} from '../lib/notifications/UtilFuns';
+
+import * as BackgroundFetch from 'expo-background-fetch';
+import { FETCH_TASK } from '../lib/notifications/InviteTask';
 
 export default function TabsLayout() {
+
+  useEffect(() => {
+
+    (async () => {
+      await initializeNotifications();
+      await registerInviteChecker();
+    })();
+  })
+
+
   return (
     <Tabs >
       <Tabs.Screen
@@ -40,4 +58,15 @@ export default function TabsLayout() {
       />
     </Tabs>
   );
+}
+
+
+async function registerInviteChecker() {
+  await BackgroundFetch.registerTaskAsync(FETCH_TASK, {
+    minimumInterval: 15 * 60, // Android minimum is ~15 min
+    stopOnTerminate: false,
+    startOnBoot: true,
+  });
+
+  console.log("Background fetch task registered successfully");
 }

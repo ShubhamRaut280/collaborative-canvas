@@ -1,4 +1,4 @@
-import NewItemDialog from '@/components/NewItemDialog';
+import NewItemDialog from '@/app/components/NewItemDialog';
 import { router } from 'expo-router';
 import { ref, set } from 'firebase/database';
 import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';

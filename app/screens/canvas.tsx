@@ -1,8 +1,8 @@
 
 import React from "react";
 
+import DrawingCanvas from "@/app/components/DrawingCanvas";
 import { useLocalSearchParams } from 'expo-router';
-import DrawingCanvas from "@/components/DrawingCanvas";
 
 
 

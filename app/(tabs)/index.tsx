@@ -1,5 +1,5 @@
 
-import NewItemDialog from '@/components/NewItemDialog'
+import NewItemDialog from '@/app/components/NewItemDialog'
 import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
 import { collection, doc, setDoc } from 'firebase/firestore'

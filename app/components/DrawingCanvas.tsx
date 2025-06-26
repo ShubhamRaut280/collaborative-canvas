@@ -5,16 +5,17 @@ import Svg, { Path as SvgPath } from 'react-native-svg';
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 
-import getSvgPathFromPoints from "@/app/utils/svgPath";
+import getSvgPathFromPoints from "../lib/utils/svgPath";
+
 import { useRouter } from 'expo-router';
 import { onChildAdded, push, ref, remove } from 'firebase/database';
-import Stroke from '../app/lib/models/Stroke';
-import { auth, rdb } from '../firebaseConfig';
+import { auth, rdb } from '../../firebaseConfig';
+import Stroke from '../lib/models/Stroke';
 
 
 

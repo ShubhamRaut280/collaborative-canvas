@@ -1,7 +1,7 @@
-import ChatScreenComp from '@/components/ChatScreenComp'
-import DrawingCanvas from '@/components/DrawingCanvas'
-import FloatingTabSwitch from '@/components/FloatingTabSwitch'
-import NewItemDialog from '@/components/NewItemDialog'
+import ChatScreenComp from '@/app/components/ChatScreenComp'
+import DrawingCanvas from '@/app/components/DrawingCanvas'
+import FloatingTabSwitch from '@/app/components/FloatingTabSwitch'
+import NewItemDialog from '@/app/components/NewItemDialog'
 import { auth, rdb } from '@/firebaseConfig'
 import { Ionicons } from '@expo/vector-icons'
 import { Button } from '@react-navigation/elements'
@@ -87,6 +87,7 @@ export default function ChatPage() {
             email: inviteEmail.trim(),
             status: 'pending',
             createdAt: new Date(),
+            roomName: roomDetails?.name || 'Unknown Room',
         }
 
         push(inviteRef, inviteObj)

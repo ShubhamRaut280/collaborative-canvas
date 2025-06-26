@@ -4,16 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { auth } from '../firebaseConfig';
 import { Provider } from 'react-redux';
 import { store } from './redux/store/store';
-import * as BackgroundFetch from 'expo-background-fetch';
-import * as TaskManager from 'expo-task-manager';
-import { BACKGROUND_NOTIFICATION_TASK } from './lib/tasks/InviteNotificationMonitor';
 import Toast from 'react-native-toast-message';
-import {
-  initializeNotifications
-} from './lib/notifications/Requests';
-import { showNotification } from './lib/notifications/ShowNotifications';
-
-
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -28,13 +19,6 @@ export default function RootLayout() {
       if (!user && !inAuthGroup) {
         router.replace('/screens/login');
       } else if (user && inAuthGroup && user.emailVerified) {
-
-        (async () => {
-          const notificationsRes = await initializeNotifications();
-          if (notificationsRes) {
-            showNotification("Welcome", "Welcome to the app! You can now receive notifications.", 0);
-          }
-        })();
         router.replace('/(tabs)');
       }
     });
@@ -66,30 +50,3 @@ export default function RootLayout() {
   );
 }
 
-
-
-async function registerNotificationTask() {
-  console.log("Running")
-  try {
-    const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_NOTIFICATION_TASK);
-    if (!isRegistered) {
-      await BackgroundFetch.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK, {
-        minimumInterval: 60 * 15, // ⏱️ run every 15 mins (minimum interval allowed)
-        stopOnTerminate: false,   // continue after app is closed
-        startOnBoot: true,        // auto start on device boot (Android only)
-      });
-      console.log('Background Notification task registered');
-      Toast.show({
-        type: 'success',
-        text1: "Background Notification task registered successfully!"
-      })
-    }
-  } catch (err) {
-    console.log('Failed to register background notification task:', err);
-    Toast.show({
-      type: "error",
-      text1: "Failed to register background notification task",
-      text2: err instanceof Error ? err.message : String(err)
-    })
-  }
-};

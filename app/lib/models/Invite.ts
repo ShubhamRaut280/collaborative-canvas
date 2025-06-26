@@ -6,6 +6,7 @@ type Invite = {
     email: string;
     status: 'pending' | 'accepted' | 'declined';
     createdAt: Date;
+    roomName: string;
 }
 
 export default Invite;
