@@ -16,7 +16,7 @@ import {
     View,
 } from 'react-native';
 import { auth } from '../../firebaseConfig';
-import { setData } from '../lib/models/db/userdata';
+import { setData } from '../lib/db/userdata';
 import Toast from 'react-native-toast-message';
 
 const loginStrings = {

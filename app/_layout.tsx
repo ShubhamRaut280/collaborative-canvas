@@ -6,9 +6,12 @@ import { Provider } from 'react-redux';
 import { store } from './redux/store/store';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import { BACKGROUND_NOTIFICATION_TASK } from './tasks/InviteNotificationMonitor';
+import { BACKGROUND_NOTIFICATION_TASK } from './lib/tasks/InviteNotificationMonitor';
 import Toast from 'react-native-toast-message';
-import App from './App';
+import {
+  initializeNotifications
+} from './lib/notifications/Requests';
+import { showNotification } from './lib/notifications/ShowNotifications';
 
 
 
@@ -19,8 +22,6 @@ export default function RootLayout() {
 
 
   useEffect(() => {
-
-
     const unsubscribe = auth.onAuthStateChanged(user => {
       setIsLoading(false);
       const inAuthGroup = segments[1] === 'login';
@@ -28,7 +29,12 @@ export default function RootLayout() {
         router.replace('/screens/login');
       } else if (user && inAuthGroup && user.emailVerified) {
 
-        registerNotificationTask();
+        (async () => {
+          const notificationsRes = await initializeNotifications();
+          if (notificationsRes) {
+            showNotification("Welcome", "Welcome to the app! You can now receive notifications.", 0);
+          }
+        })();
         router.replace('/(tabs)');
       }
     });
@@ -74,16 +80,16 @@ async function registerNotificationTask() {
       });
       console.log('Background Notification task registered');
       Toast.show({
-        type : 'success',
-        text1 : "Background Notification task registered successfully!"
+        type: 'success',
+        text1: "Background Notification task registered successfully!"
       })
     }
   } catch (err) {
     console.log('Failed to register background notification task:', err);
     Toast.show({
-      type : "error",
-      text1 : "Failed to register background notification task",
-      text2 : err instanceof Error ? err.message : String(err)
+      type: "error",
+      text1: "Failed to register background notification task",
+      text2: err instanceof Error ? err.message : String(err)
     })
   }
 };
