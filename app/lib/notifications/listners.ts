@@ -1,4 +1,4 @@
-import { onValue, ref } from 'firebase/database';
+import { get, onValue, ref } from 'firebase/database';
 import { auth, rdb } from '../../../firebaseConfig';
 import Invite from '../models/Invite';
 import { showNotification } from './ShowNotifications';
@@ -53,4 +53,38 @@ function listenForInvites(): () => void {
     };
 }
 
-export { listenForInvites };
+
+async function getPendingInvites(): Promise<Invite[]> {
+  const userEmail = auth.currentUser?.email;
+
+  if (!userEmail) {
+    console.warn('❌ No user logged in.');
+    return [];
+  }
+
+  try {
+    const snapshot = await get(ref(rdb, '/invites'));
+    const data = snapshot.val();
+
+    if (!data) {
+      console.log('📭 No invites found in database.');
+      return [];
+    }
+
+    const invites: Invite[] = Object.entries(data)
+      .map(([key, value]: [string, any]) => ({
+        id: key,
+        ...value,
+      }))
+      .filter(invite => invite.email === userEmail && invite.status === 'pending');
+
+    console.log(`📨 Found ${invites.length} pending invites.`);
+    return invites;
+  } catch (error) {
+    console.error('❌ Error fetching invites:', error);
+    return [];
+  }
+}
+
+
+export { listenForInvites, getPendingInvites };
