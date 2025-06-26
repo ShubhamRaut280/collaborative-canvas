@@ -1,5 +1,5 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { auth } from '../firebaseConfig';
 import { Provider } from 'react-redux';
@@ -8,6 +8,7 @@ import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { BACKGROUND_NOTIFICATION_TASK } from './tasks/InviteNotificationMonitor';
 import Toast from 'react-native-toast-message';
+import App from './App';
 
 
 
@@ -44,6 +45,7 @@ export default function RootLayout() {
 
   return (
     <>
+      {/* <App /> */}
 
       <Provider store={store}>
 

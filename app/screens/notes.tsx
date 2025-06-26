@@ -11,9 +11,8 @@ import {
     View,
 } from 'react-native';
 
-import { auth, rdb } from '@/firebaseConfig';
-import { onChildAdded, ref, set, push } from 'firebase/database';
-import { Message } from '../models/Message';
+import { rdb } from '@/firebaseConfig';
+import { onChildAdded, push, ref } from 'firebase/database';
 
 type Note = {
     id: string;

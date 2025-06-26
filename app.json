@@ -15,11 +15,14 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-        
       },
       "edgeToEdgeEnabled": true,
-      "jsEngine": "hermes",
-      "package": "com.anonymous.canvaapp"
+      "package": "com.anonymous.canvaapp",
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "NOTIFICATIONS",
+        "PUSH_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -36,7 +39,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

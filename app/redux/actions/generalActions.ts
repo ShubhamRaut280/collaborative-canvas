@@ -1,10 +1,10 @@
-import { onSnapshot, collection } from 'firebase/firestore';
-import { firestore, auth } from '@/firebaseConfig';
-import { AppDispatch } from '../store/store';
-import { setRooms, setLoading as setRoomLoading } from '../slice/roomSlice';
+import CanvasFile from '@/app/lib/models/CanvasFile';
+import { Room } from '@/app/lib/models/Room';
+import { auth, firestore } from '@/firebaseConfig';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { setCanvasFiles, setLoading as setCanvasFilesLoading } from '../slice/canvasSlice';
-import { Room } from '@/app/models/Room';
-import CanvasFile from '@/app/models/CanvasFile';
+import { setLoading as setRoomLoading, setRooms } from '../slice/roomSlice';
+import { AppDispatch } from '../store/store';
 
 export const subscribeToRooms = () => (dispatch: AppDispatch) => {
   dispatch(setRoomLoading(true));

@@ -1,4 +1,4 @@
-import { Room } from '@/app/models/Room';
+import { Room } from '@/app/lib/models/Room';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface RoomState {

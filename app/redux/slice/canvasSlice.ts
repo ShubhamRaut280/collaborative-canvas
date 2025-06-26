@@ -1,4 +1,4 @@
-import CanvasFile from "@/app/models/CanvasFile";
+import CanvasFile from "@/app/lib/models/CanvasFile";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 

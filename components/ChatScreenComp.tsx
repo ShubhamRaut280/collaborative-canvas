@@ -1,8 +1,8 @@
-import { Message } from '@/app/models/Message';
+import { Message } from '@/app/lib/models/Message';
+import { auth } from '@/firebaseConfig';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '@/firebaseConfig';
 
 type Props = {
   messages: Message[]

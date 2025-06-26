@@ -1,16 +1,16 @@
 
+import NewItemDialog from '@/components/NewItemDialog'
 import { useRouter } from 'expo-router'
 import { ref, set } from 'firebase/database'
 import { collection, doc, setDoc } from 'firebase/firestore'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { auth, firestore, rdb } from '../../firebaseConfig'
-import CanvasFile from '../models/CanvasFile'
-import Stroke from '../models/Stroke'
-import NewItemDialog from '@/components/NewItemDialog'
 import { useDispatch, useSelector } from 'react-redux'
-import { AppDispatch, RootState } from '../redux/store/store'
+import { auth, firestore, rdb } from '../../firebaseConfig'
+import CanvasFile from '../lib/models/CanvasFile'
+import Stroke from '../lib/models/Stroke'
 import { subscribeToCanvasFiles } from '../redux/actions/generalActions'
+import { AppDispatch, RootState } from '../redux/store/store'
 
 const Home = () => {
     const [dialogVisible, setDialogVisible] = useState(false)

@@ -1,16 +1,15 @@
 import NewItemDialog from '@/components/NewItemDialog';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { ref, set } from 'firebase/database';
-import { collection, doc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth, firestore, rdb } from '../../firebaseConfig';
-import { Room } from '../models/Room';
-import Stroke from '../models/Stroke';
-import { AppDispatch, RootState } from '../redux/store/store';
 import { useDispatch, useSelector } from 'react-redux';
+import { auth, firestore, rdb } from '../../firebaseConfig';
+import { Room } from '../lib/models/Room';
+import Stroke from '../lib/models/Stroke';
 import { subscribeToRooms } from '../redux/actions/generalActions';
-import { router } from 'expo-router';
+import { AppDispatch, RootState } from '../redux/store/store';
 
 export default function ChatRoom() {
   const [dialogVisible, setDialogVisible] = useState<'create' | 'join' | null>(null);

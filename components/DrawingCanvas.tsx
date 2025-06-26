@@ -13,7 +13,7 @@ import {
 import getSvgPathFromPoints from "@/app/utils/svgPath";
 import { useRouter } from 'expo-router';
 import { onChildAdded, push, ref, remove } from 'firebase/database';
-import Stroke from '../app/models/Stroke';
+import Stroke from '../app/lib/models/Stroke';
 import { auth, rdb } from '../firebaseConfig';
 
 
