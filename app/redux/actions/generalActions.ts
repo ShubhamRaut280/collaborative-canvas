@@ -41,18 +41,21 @@ export const subscribeToCanvasFiles = () => (dispatch: AppDispatch) => {
   });
 };
 
+const previousInviteStatuses: Record<string, string> = {}; // 🔁 Track status per invite ID
+
 
 export const subscribeToInvites = () => (dispatch: AppDispatch) => {
-
   const email = auth.currentUser?.email;
   if (!email) {
-    return () => { };
+    return () => {};
   }
-  return onValue(ref(rdb, '/invites'), snapshot => {
+
+  const invitesRef = ref(rdb, '/invites');
+
+  return onValue(invitesRef, snapshot => {
     const data = snapshot.val();
-    if (!data) {
-      return;
-    }
+    if (!data) return;
+
     const invites: Invite[] = Object.entries(data)
       .map(([key, value]: [string, any]) => ({
         id: key,
@@ -60,17 +63,25 @@ export const subscribeToInvites = () => (dispatch: AppDispatch) => {
       }))
       .filter(invite => invite.sender === email || invite.receiver === email);
 
+    // Dispatch to Redux
     dispatch(setInvites(invites));
 
-    invites.map(invite => {
-      if( invite.receiver === email && invite.status === 'pending') {
-        showNotification("Room Joining Invitation", `You have been invited to join ${invite.roomName}`)
-      }else if( invite.sender === email && invite.status === 'accepted') {
-        showNotification("Invitation Accepted", `Your invitation to join ${invite.roomName} has been accepted by ${invite.receiver}`)
-      }else if( invite.sender === email && invite.status === 'declined') {
-        showNotification("Invitation Declined", `Your invitation to join ${invite.roomName} has been declined by ${invite.receiver}`)
+    invites.forEach(invite => {
+      const previousStatus = previousInviteStatuses[invite.id];
+      const currentStatus = invite.status;
+
+      // Only notify if status has changed
+      if (previousStatus !== currentStatus) {
+        previousInviteStatuses[invite.id] = currentStatus; // update tracked status
+
+        if (invite.receiver === email && currentStatus === 'pending') {
+          showNotification('Room Joining Invitation', `You have been invited to join ${invite.roomName}`);
+        } else if (invite.sender === email && currentStatus === 'accepted') {
+          showNotification('Invitation Accepted', `Your invitation to join ${invite.roomName} has been accepted by ${invite.receiver}`);
+        } else if (invite.sender === email && currentStatus === 'declined') {
+          showNotification('Invitation Declined', `Your invitation to join ${invite.roomName} has been declined by ${invite.receiver}`);
+        }
       }
     });
   });
 };
-
