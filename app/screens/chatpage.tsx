@@ -15,6 +15,9 @@ import Invite from '../lib/models/Invite'
 import { Message } from '../lib/models/Message'
 import { Room } from '../lib/models/Room'
 import NotesScreen from './notes'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+
 const canvasBackgroundColor = '#fff'
 
 export default function ChatPage() {
@@ -84,7 +87,8 @@ export default function ChatPage() {
         const inviteObj: Invite = {
             id: Date.now().toString(),
             roomcode: roomDetails?.code || "",
-            email: inviteEmail.trim(),
+            receiver: inviteEmail.trim(),
+            sender: auth.currentUser?.email || 'Unknown',
             status: 'pending',
             createdAt: new Date(),
             roomName: roomDetails?.name || 'Unknown Room',
@@ -93,6 +97,9 @@ export default function ChatPage() {
         const newInviteRef = push(inviteRef)
         inviteObj.id = newInviteRef.key || Date.now().toString()
         await set(newInviteRef, inviteObj)
+
+        saveInviteToStorage(inviteObj.id)
+
         setInviteDialogVisible(false);
 
         Toast.show({
@@ -233,3 +240,25 @@ const styles = StyleSheet.create({
         borderBottomColor: '#ddd',
     },
 })
+
+
+function saveInviteToStorage(inviteId : string) {
+    AsyncStorage.getItem('invites')
+        .then((data) => {
+            const existingInvites : string[] = data ? JSON.parse(data) : [];
+            existingInvites.push(inviteId);
+            return AsyncStorage.setItem('invites', JSON.stringify(existingInvites));
+        })
+        .catch((error) => console.error('Error saving invite:', error));
+}
+
+function getInvitesFromStorage(): Promise<string[]> {
+    return AsyncStorage.getItem('invites')
+        .then((data) => {
+            return data ? JSON.parse(data) : [];
+        })
+        .catch((error) => {
+            console.error('Error fetching invites from storage:', error);
+            return [];
+        });
+}

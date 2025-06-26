@@ -3,31 +3,21 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Invite from '../lib/models/Invite';
-import { getPendingInvites } from '../lib/notifications/listners';
+
 import { rdb } from '@/firebaseConfig';
 import { ref, set, update } from '@firebase/database';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store/store';
 
 const Notifications = () => {
-    const [notifications, setNotifications] = useState<Invite[]>([]);
+    const {invites : notifications } = useSelector((state : RootState) => state.invites);
 
-    useEffect(() => {
-        (async () => {
-            const invites = await getPendingInvites();
-            if (invites.length > 0) {
-                setNotifications(invites);
-            }
-        })();
-    }, [notifications.length]);
-
-    const handleAccept = async (invite: Invite) => {
-        invite.status = 'accepted';
-        await changeInvitationStatus(invite);
-        setNotifications(prev => prev.filter(item => item.id !== invite.id));
-    };
+    
 
     const changeInvitationStatus = async (invite: Invite) => {
         // Update the status of the invite in Firebase Realtime Database
         try {
+            console.log("updating invitations : ", invite);
             const inviteRef = ref(rdb, `invites/${invite.id}`);
             await update(inviteRef, invite)
 
@@ -37,10 +27,14 @@ const Notifications = () => {
     }
 
     const handleDecline = async (invite: Invite) => {
-        invite.status = 'declined';
-        await changeInvitationStatus(invite);
-
-        setNotifications(prev => prev.filter(item => item.id !== invite.id));
+        const copy = { ...invite };
+        copy.status = 'declined';
+        await changeInvitationStatus(copy);
+    };
+    const handleAccept = async (invite: Invite) => {
+        const copy = { ...invite };
+        copy.status = 'accepted';
+        await changeInvitationStatus(copy);
     };
 
     function renderInvite({ item: invite }: { item: Invite }): React.ReactElement {

@@ -3,10 +3,14 @@ import { Tabs } from 'expo-router';
 import { useEffect } from 'react';
 
 
-import { listenForInvites } from '../lib/notifications/listners';
 import { initializeNotifications } from '../lib/notifications/UtilFuns';
+import { subscribeToInvites } from '../redux/actions/generalActions';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store/store';
 
 export default function TabsLayout() {
+
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
 
@@ -20,7 +24,8 @@ export default function TabsLayout() {
       }
     })();
 
-    const stopListening = listenForInvites();
+    const stopListening = dispatch(subscribeToInvites());
+
 
     return () => {
       stopListening(); // clean up listener
