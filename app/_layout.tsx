@@ -50,3 +50,7 @@ export default function RootLayout() {
   );
 }
 
+function initializeNotifications() {
+  throw new Error('Function not implemented.');
+}
+

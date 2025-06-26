@@ -11,6 +11,7 @@ function showNotification(title: string, body: string, delay: number = 0): void 
             },
             trigger: { seconds: delay, channelId: 'default' },
         });
+        console.log(`✅ Notification scheduled: ${title} - ${body}`);
     } catch (error) {
         console.error('❌ Error showing notification:', error);
     }
