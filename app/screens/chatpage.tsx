@@ -6,7 +6,7 @@ import { auth, rdb } from '@/firebaseConfig'
 import { Ionicons } from '@expo/vector-icons'
 import { Button } from '@react-navigation/elements'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { onChildAdded, push, ref } from 'firebase/database'
+import { onChildAdded, push, ref, set } from 'firebase/database'
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -81,7 +81,7 @@ export default function ChatPage() {
 
     const handleDialogSubmit = async () => {
         if (!inviteEmail.trim()) return
-        const inviteObj  : Invite = {
+        const inviteObj: Invite = {
             id: Date.now().toString(),
             roomcode: roomDetails?.code || "",
             email: inviteEmail.trim(),
@@ -90,12 +90,14 @@ export default function ChatPage() {
             roomName: roomDetails?.name || 'Unknown Room',
         }
 
-        push(inviteRef, inviteObj)
+        const newInviteRef = push(inviteRef)
+        inviteObj.id = newInviteRef.key || Date.now().toString()
+        await set(newInviteRef, inviteObj)
         setInviteDialogVisible(false);
 
         Toast.show({
-            type : 'success',
-            text1 : "Invitation sent!"
+            type: 'success',
+            text1: "Invitation sent!"
         })
 
         setInviteEmail('');

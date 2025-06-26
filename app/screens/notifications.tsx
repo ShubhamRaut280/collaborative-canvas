@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Invite from '../lib/models/Invite';
 import { getPendingInvites } from '../lib/notifications/listners';
+import { rdb } from '@/firebaseConfig';
+import { ref, set, update } from '@firebase/database';
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState<Invite[]>([]);
@@ -15,17 +17,29 @@ const Notifications = () => {
                 setNotifications(invites);
             }
         })();
-    }, []);
+    }, [notifications.length]);
 
-    const handleAccept = (invite: Invite) => {
-        console.log('Accepted invite:', invite.id);
-        // Remove from notifications after accepting
+    const handleAccept = async (invite: Invite) => {
+        invite.status = 'accepted';
+        await changeInvitationStatus(invite);
         setNotifications(prev => prev.filter(item => item.id !== invite.id));
     };
 
-    const handleDecline = (invite: Invite) => {
-        console.log('Declined invite:', invite.id);
-        // Remove from notifications after declining
+    const changeInvitationStatus = async (invite: Invite) => {
+        // Update the status of the invite in Firebase Realtime Database
+        try {
+            const inviteRef = ref(rdb, `invites/${invite.id}`);
+            await update(inviteRef, invite)
+
+        } catch (error) {
+            console.error('Error updating invite status:', error);
+        }
+    }
+
+    const handleDecline = async (invite: Invite) => {
+        invite.status = 'declined';
+        await changeInvitationStatus(invite);
+
         setNotifications(prev => prev.filter(item => item.id !== invite.id));
     };
 
@@ -50,15 +64,15 @@ const Notifications = () => {
                 </View>
 
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.declineButton}
                         onPress={() => handleDecline(invite)}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.declineButtonText}>Decline</Text>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                         style={styles.acceptButton}
                         onPress={() => handleAccept(invite)}
                         activeOpacity={0.8}
@@ -111,7 +125,7 @@ const TopNavBar = () => {
                 </TouchableOpacity>
 
                 <Text style={styles.headerTitle}>Notifications</Text>
-                
+
                 <View style={styles.headerRight} />
             </View>
         </>
@@ -125,7 +139,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8FAFC',
     },
-    
+
     // Header Styles
     headerContainer: {
         flexDirection: 'row',
@@ -160,13 +174,13 @@ const styles = StyleSheet.create({
     headerRight: {
         width: 40, // Balance the layout
     },
-    
+
     // List Styles
     listContainer: {
         padding: 20,
         paddingBottom: 40,
     },
-    
+
     // Invite Card Styles
     inviteCard: {
         backgroundColor: '#FFFFFF',
@@ -208,7 +222,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#6B7280',
     },
-    
+
     // Room Info Styles
     roomContainer: {
         backgroundColor: '#F8FAFC',
@@ -229,7 +243,7 @@ const styles = StyleSheet.create({
         color: '#6B7280',
         fontFamily: 'monospace',
     },
-    
+
     // Button Styles
     buttonContainer: {
         flexDirection: 'row',
@@ -268,7 +282,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#6B7280',
     },
-    
+
     // Empty State Styles
     emptyContainer: {
         alignItems: 'center',

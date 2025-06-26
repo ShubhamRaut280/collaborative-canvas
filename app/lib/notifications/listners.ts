@@ -75,8 +75,10 @@ async function getPendingInvites(): Promise<Invite[]> {
       .map(([key, value]: [string, any]) => ({
         id: key,
         ...value,
+        
       }))
-      .filter(invite => invite.email === userEmail && invite.status === 'pending');
+      .filter(invite => invite.email === userEmail && invite.status === 'pending')
+    ;
 
     console.log(`📨 Found ${invites.length} pending invites.`);
     return invites;
