@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,11 +9,14 @@ interface CustomHeaderProps {
   notificationBadge?: boolean;
 }
 
-const CustomHeader: React.FC<CustomHeaderProps> = ({ 
-  title = "Canva App", 
+const CustomHeader: React.FC<CustomHeaderProps> = ({
+  title = "Canva App",
   onNotificationPress,
-  notificationBadge = false 
+  notificationBadge = false
 }) => {
+
+  const router = useRouter();
+
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -20,19 +24,27 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
         <View style={styles.leftSection}>
           <Text style={styles.title}>{title}</Text>
         </View>
-        
+
         <View style={styles.rightSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.notificationButton}
             onPress={onNotificationPress}
             activeOpacity={0.7}
           >
             <Ionicons name='notifications-outline' size={24} color='#333' />
-            {notificationBadge && (
+            {/* {notificationBadge && (
               <View style={styles.badge}>
                 <View style={styles.badgeDot} />
               </View>
-            )}
+            )} */}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => router.push('/screens/checkout')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name='card-outline' size={24} color='#333' />
+            
           </TouchableOpacity>
         </View>
       </View>
@@ -59,7 +71,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    marginBottom : -30,
+    marginBottom: -30,
     borderBottomWidth: 0.5,
     borderBottomColor: '#e0e0e0',
   },
@@ -80,6 +92,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: 8,
     borderRadius: 20,
+    marginLeft: 12,
     backgroundColor: '#f8f9fa',
   },
   badge: {
