@@ -16,10 +16,12 @@ import {
   SenderInviteCard,
 } from '../components/InviteCards';
 import Invite from '../lib/models/Invite';
-import { auth, rdb } from '@/firebaseConfig';
+import { auth, firestore, rdb } from '@/firebaseConfig';
 import { ref, update } from '@firebase/database';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store/store';
+import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { Room } from '../lib/models/Room';
 
 const Notifications = () => {
   const { invites } = useSelector((state: RootState) => state.invites);
@@ -40,7 +42,33 @@ const Notifications = () => {
 
   const handleAccept = async (invite: Invite) => {
     await changeInvitationStatus({ ...invite, status: 'accepted' });
+    await joinRoom(invite.roomcode);
   };
+
+  const joinRoom = async (roomCode: string) => {
+    const roomQuery = collection(firestore, 'rooms');
+    const roomSnapshot = await getDocs(query(roomQuery, where('code', '==', roomCode)));
+    if (roomSnapshot.empty) {
+      return;
+    }
+    const roomData = roomSnapshot.docs[0].data() as Room;
+    const roomId = roomSnapshot.docs[0].id;
+
+    // Check if user is already a member
+    if (roomData.members.some(member => member.id === auth.currentUser?.uid)) {
+      return;
+    }
+
+    // Add user to the room
+    const updatedMembers = [...roomData.members, {
+      id: auth.currentUser?.uid || 'unknown',
+      name: auth.currentUser?.displayName || 'Unknown User'
+    }];
+
+    await setDoc(doc(firestore, 'rooms', roomId), { ...roomData, members: updatedMembers }, { merge: true });
+  };
+
+
 
   const filteredInvites = invites.filter((invite) =>
     (invite.receiver === email && invite.status === 'pending') ||
@@ -91,7 +119,6 @@ const Notifications = () => {
         renderItem={renderInvite}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<NoNotifications />}
       />
     </View>
   );

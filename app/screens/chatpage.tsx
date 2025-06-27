@@ -2,7 +2,7 @@ import ChatScreenComp from '@/app/components/ChatScreenComp'
 import DrawingCanvas from '@/app/components/DrawingCanvas'
 import FloatingTabSwitch from '@/app/components/FloatingTabSwitch'
 import NewItemDialog from '@/app/components/NewItemDialog'
-import { auth, rdb } from '@/firebaseConfig'
+import { auth, firestore, rdb } from '@/firebaseConfig'
 import { Ionicons } from '@expo/vector-icons'
 import { Button } from '@react-navigation/elements'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -16,6 +16,7 @@ import { Message } from '../lib/models/Message'
 import { Room } from '../lib/models/Room'
 import NotesScreen from './notes'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 
 
 const canvasBackgroundColor = '#fff'
@@ -34,6 +35,23 @@ export default function ChatPage() {
     const roomCode = roomDetails?.code || ''
     const chatRef = ref(rdb, `rooms/${roomCode}/chat`)
     const inviteRef = ref(rdb, `invites/`);
+
+
+    const [isOwner, setIsOwner] = useState(false)
+
+    useEffect(() => {
+        if (!roomCode) return
+
+        const checkRoomOwnership = async () => {
+            const roomSnapshot = await getDocs(query(collection(firestore, 'rooms'), where('code', '==', roomCode)))
+            if (!roomSnapshot.empty) {
+                const roomData = roomSnapshot.docs[0].data() as Room
+                setIsOwner(roomData.creator === auth.currentUser?.displayName)
+            }
+        }
+
+        checkRoomOwnership()
+    }, [roomCode])
 
 
     useEffect(() => {
@@ -160,7 +178,10 @@ export default function ChatPage() {
                         <Text style={{ fontWeight: 'bold' }}>{roomCode}</Text>
                         <Text style={styles.shareText}> code to invite others</Text>
                     </View>
-                    <Button onPressIn={handleInvitePress} > Invite </Button>
+
+                    {isOwner && (
+                        <Button onPressIn={handleInvitePress} > Invite </Button>
+                    )}
 
                 </View>
             </View>
@@ -242,10 +263,10 @@ const styles = StyleSheet.create({
 })
 
 
-function saveInviteToStorage(inviteId : string) {
+function saveInviteToStorage(inviteId: string) {
     AsyncStorage.getItem('invites')
         .then((data) => {
-            const existingInvites : string[] = data ? JSON.parse(data) : [];
+            const existingInvites: string[] = data ? JSON.parse(data) : [];
             existingInvites.push(inviteId);
             return AsyncStorage.setItem('invites', JSON.stringify(existingInvites));
         })
