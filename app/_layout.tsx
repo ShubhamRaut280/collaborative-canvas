@@ -18,7 +18,6 @@ export default function RootLayout() {
 
 
   useEffect(() => {
-
     const key = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'your-stripe-publishable-key'; // fetch key from your server here
     setPublishableKey(key);
   }, []);
